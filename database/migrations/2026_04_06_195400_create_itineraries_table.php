@@ -14,7 +14,6 @@ return new class extends Migration {
             $table->id();
             $table->string('nome')->nullable();
             $table->json('itinerario')->nullable();
-            $table->json('immagini')->nullable();
             $table->timestamps();
         });
     }

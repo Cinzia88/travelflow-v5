@@ -17,7 +17,7 @@ class ValidatedTab
     public static function make(string|Htmlable|callable|null $label = null, array $fields = []): Tab
     {
         return Tab::make($label)
-            ->badge(fn(Get $get, Component $compontent) => static::hasErrors($get, $fields, $compontent) ? '●' : '✓')
+            ->badge(fn(Get $get, Component $compontent) => static::hasErrors($get, $fields, $compontent) ? '●' : '●')//'✓'
             ->badgeColor(fn(Get $get, Component $compontent) => static::hasErrors($get, $fields, $compontent) ? 'danger' : 'success')
             ->live();
         /* $get è una funzione che ti permette di andare a sbirciare il valore di altri campi nel form in tempo reale.
@@ -114,15 +114,37 @@ Se il controllo fallisce (es. mancano immagini), la funzione si interrompe immed
                         return true;
                     continue;
                 }
-                // --- 3. Logica Trasporti (Dot Notation) ---
-                if (in_array($field, ['trasporto_andata', 'trasporto_rientro'])) {
-                    $suffix = ($field === 'trasporto_andata') ? '_andata' : '_rientro';
-                    $required = ['luogo_di_partenza', 'luogo_di_arrivo', 'data_ora_partenza', 'tipo_trasporto', 'prezzo'];
+                // --- 3. Logica Trasporti  ---
 
-                    foreach ($required as $key) {
-                        if (self::isEmpty($get("{$field}.{$key}{$suffix}")))
+
+                if (in_array($field, ['trasporto_andata', 'trasporto_rientro'])) {
+
+                    $isAndata = $field === 'trasporto_andata';
+
+                    $keys = $isAndata ? [
+                        'luogo_di_partenza_andata',
+                        'luogo_di_arrivo_andata',
+                        'data_ora_partenza_andata',
+                        'data_ora_arrivo_andata',
+                        'tipo_costo',
+                        'prezzo',
+                        'tipo_trasporto',
+                    ] : [
+                        'luogo_di_partenza_rientro',
+                        'luogo_di_arrivo_rientro',
+                        'data_ora_partenza_rientro',
+                        'data_ora_arrivo_rientro',
+                        'tipo_costo',
+                        'prezzo',
+                        'tipo_trasporto',
+                    ];
+
+                    foreach ($keys as $key) {
+                        if (self::isEmpty($get("{$field}.{$key}"))) {
                             return true;
+                        }
                     }
+
                     continue;
                 }
 

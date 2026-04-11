@@ -14,7 +14,7 @@ class ItineraryForm
     {
         return $schema
             ->components([
-               TextInput::make('nome')->label('Nome')
+                TextInput::make('nome')->label('Nome')
                     ->columnSpanFull()
                     ->required(),
                 Repeater::make('itinerario')
@@ -24,6 +24,7 @@ class ItineraryForm
                             ->columnSpanFull()
                             ->required(),
                         RichEditor::make('descrizione')
+                            ->json()
                             ->toolbarButtons([
                                 'bold',
                                 'bulletList',

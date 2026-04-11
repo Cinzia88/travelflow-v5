@@ -27,12 +27,6 @@ return new class extends Migration
             $table->boolean('gita_giornaliera')->nullable();
             $table->boolean('allego_file')->nullable();
             $table->json('itinerario')->nullable();
-            $table->string('titolo')->nullable();
-            $table->integer('numero')->nullable();
-            $table->integer('anno')->nullable();
-            $table->date('data_preventivo')->nullable();
-            $table->date('data_invio')->nullable();
-            $table->string('tag')->nullable();
             $table->string('email_cliente')->nullable();
             $table->integer('numero_persone')->nullable();
             $table->integer('prezzo_per_persona')->nullable();

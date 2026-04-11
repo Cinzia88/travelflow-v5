@@ -49,12 +49,14 @@ trait HandlesDraftSaving
 {
     $this->isDraft = true;
     $this->resetValidation();
-
+// Usiamo getRawState() perché è l'unico modo per vedere i dati 
+    // prima che la convalida di Filament lanci l'errore del RichEditor.
+    //dd($this->form->getRawState());
     // 1. Prendi tutti i dati dal form
     $data = $this->form->getState();
 
     DB::transaction(function () use ($data) {
-        $preventivo = $this->record ?? new \App\Models\Preventive();
+        $preventivo = $this->record ?? new Preventive();
         
         // 2. SEPARAZIONE: Estraiamo i dati dell'email per dopo
         $emailData = [
@@ -75,20 +77,20 @@ trait HandlesDraftSaving
             $data['allegati']
         );
 
-        $data['stato'] = \App\PreventiveStatus::BOZZA;
+        $data['stato'] = PreventiveStatus::BOZZA;
 
         // 4. SALVATAGGIO PREVENTIVO (ora è pulito e non crasha)
         if ($this->record) {
             $this->record->update($data);
         } else {
-            $this->record = \App\Models\Preventive::create($data);
+            $this->record = Preventive::create($data);
         }
 
         // 5. SALVATAGGIO RELAZIONI (Hotel, extra, ecc.)
         $this->form->model($this->record)->saveRelationships();
         
         // 6. SALVATAGGIO EMAIL (usiamo l'array filtrato al punto 2)
-        $this->saveEmailDraft($this->record, $emailData);
+        //$this->saveEmailDraft($this->record, $emailData);
     });
 
     Notification::make()->title('Bozza salvata!')->success()->send();

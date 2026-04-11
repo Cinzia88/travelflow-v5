@@ -10,6 +10,11 @@ class ListPreventives extends ListRecords
 {
     protected static string $resource = PreventiveResource::class;
 
+    protected static ?string $title = 'Lista Preventivi';
+
+
+    
+
     protected function getHeaderActions(): array
     {
         return [

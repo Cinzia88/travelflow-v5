@@ -29,25 +29,22 @@ class Preventive extends Model
     protected static function booted()
     {
         static::creating(function ($preventivo) {
-            if (empty($preventivo->cod_alfa)) {
-                $preventivo->cod_alfa = \Illuminate\Support\Str::random(8);
-            }
-            if (empty($preventivo->created_by)) {
-                $preventivo->created_by = auth()->id();
-            }
+            $preventivo->cod_alfa = \Illuminate\Support\Str::random(8);
+            $preventivo->created_by = auth()->id();
+            $preventivo->anno = Carbon::now()->year;
+            $preventivo->data_preventivo = Carbon::now();
         });
 
         static::created(function ($preventivo) {
             if (empty($preventivo->numero)) {
                 // Esempio base:
                 $preventivo->numero = $preventivo->id;
-
-                // Oppure formato personalizzato:
-                // $preventivo->numero = now()->year . '-' . str_pad($preventivo->id, 5, '0', STR_PAD_LEFT);
-
-                $preventivo->saveQuietly();
             }
+
+            $preventivo->saveQuietly();
         });
+
+
     }
 
 
@@ -263,6 +260,7 @@ class Preventive extends Model
         // ---- ITINERARIO ----
         $rawItinerario = $this->itinerario ?? $this->itinerary->itinerario ?? [];
 
+
         // Se è una stringa JSON, decodificala
         if (is_string($rawItinerario)) {
             $decoded = json_decode($rawItinerario, true);
@@ -281,9 +279,13 @@ class Preventive extends Model
 
         $itinerarioData = collect($rawItinerario)
             ->map(function ($step) {
+                $rawDescrizione = $step['descrizione'] ?? [];
+                $descrizione = is_array($rawDescrizione)
+                    ? collect($rawDescrizione['content'] ?? [])->map(fn($item) => collect($item['content'] ?? [])->pluck('text')->implode(' '))->implode("\n")
+                    : strip_tags((string) $rawDescrizione);
                 return [
                     'titolo' => $step['titolo'] ?? '',
-                    'descrizione' => $step['descrizione'] ?? '',
+                    'descrizione' => $descrizione,
                     'immagini' => collect($step['immagini'] ?? [])
                         ->map(function ($img) {
                             $path = storage_path('app/public/' . ltrim($img, '/'));

@@ -52,12 +52,16 @@ class PreventiveResource extends Resource
         ];
     }
 
+     public static function getBreadcrumb(): string
+    {
+        return 'Preventivi';
+    }
+
     public static function getPages(): array
     {
         return [
             'index' => ListPreventives::route('/'),
             'create' => CreatePreventive::route('/create'),
-            'view' => ViewPreventive::route('/{record}'),
             'edit' => EditPreventive::route('/{record}/edit'),
         ];
     }

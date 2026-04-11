@@ -8,11 +8,14 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\TimePicker;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Actions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Group;
 use Filament\Forms\Components\Repeater;
@@ -44,9 +47,16 @@ class PreventiveForm
     {
         return $schema
             ->components([
-                Placeholder::make('avviso_bozza')
+
+
+
+
+
+
+
+                TextEntry::make('avviso_bozza')
                     ->label('')
-                    ->content('Attenzione: per visualizzare il preventivo aggiornato, è necessario prima cliccare su "Salva come bozza".')
+                    ->state('Attenzione: per visualizzare il preventivo aggiornato, è necessario prima cliccare su "Salva come bozza".')
                     ->visibleOn('edit')
                     ->columnSpanFull(),
                 Tabs::make('Creazione Preventivo')
@@ -63,36 +73,62 @@ class PreventiveForm
                             'data_inizio_viaggio',
                             'data_fine_viaggio',
                             'foto_introduttiva',
-                            'tag',
                         ])
                             ->schema([
 
-
-                                Group::make()
+                                // All'interno del tuo Form Schema...
+                                Grid::make(4) // Organizziamoli in una griglia
                                     ->schema([
-                                        TextInput::make('numero')
-                                            ->label('Numero Preventivo')
-                                            ->disabled()
-                                            ->dehydrated(true)
+
+                                        // 1. Numero Preventivo
+                                        TextEntry::make('numero')
+                                            ->label('N° Preventivo')
                                             ->visibleOn('edit'),
-                                        TextInput::make('created_by')
+
+                                        // 2. Creato da (Agente)
+                                        TextEntry::make('created_by')
                                             ->label('Creato da')
-                                            ->disabled()
                                             ->visibleOn('edit')
-                                            ->afterStateHydrated(function ($component, $state, $record) {
-                                                if (!$record || !$record->created_by) {
-                                                    $component->state('Agente Rimosso');
-                                                    return;
-                                                }
+                                            ->state(function ($record) {
 
                                                 $user = User::find($record->created_by);
-                                                $component->state($user ? "{$user->nome} {$user->cognome}" : 'Agente Rimosso');
-                                            })
-                                            ->dehydrated(false),
+                                                return $user ? "{$user->nome} {$user->cognome}" : 'Agente Rimosso';
+                                            }),
+
+                                        // 3. Data Preventivo (Sostituito a DatePicker se vuoi solo visualizzarlo)
+                                        TextEntry::make('anno')
+
+                                            ->visibleOn('edit'),
+                                        TextEntry::make('data_preventivo')
+                                            ->label('Data Preventivo')
+                                            ->dateTime('d/m/Y')
+                                            ->visibleOn('edit'),
+                                    ]),
+                                /*  Group::make()
+                                     ->schema([
+                                         TextInput::make('numero')
+                                             ->label('Numero Preventivo')
+                                             ->disabled()
+                                             ->dehydrated(true)
+                                             ->visibleOn('edit'),
+                                         TextInput::make('created_by')
+                                             ->label('Creato da')
+                                             ->disabled()
+                                             ->visibleOn('edit')
+                                             ->afterStateHydrated(function ($component, $state, $record) {
+                                                 if (!$record || !$record->created_by) {
+                                                     $component->state('Agente Rimosso');
+                                                     return;
+                                                 }
+
+                                                 $user = User::find($record->created_by);
+                                                 $component->state($user ? "{$user->nome} {$user->cognome}" : 'Agente Rimosso');
+                                             })
+                                             ->dehydrated(false),
 
 
-                                    ])
-                                    ->columns(2),
+                                     ])
+                                     ->columns(2), */
 
                                 Group::make()
                                     ->schema([
@@ -150,105 +186,48 @@ class PreventiveForm
 
 
 
-                                        Hidden::make('anno')
-                                            ->label('Anno')
-                                            ->default(Carbon::now()->format('Y'))
-                                            ->dehydrated()
-                                            ->required(),
-                                        DatePicker::make('data_preventivo')
-                                            ->displayFormat('d/m/Y')
-                                            ->default(Carbon::now())
-                                            ->disabled()
-                                            ->dehydrated(true)
-                                            ->label('Data Preventivo')
-                                            ->required(fn($livewire) => !$livewire->isDraft),
+                                        /*      Hidden::make('anno')
+                                                 ->label('Anno')
+                                                 ->default(Carbon::now()->format('Y'))
+                                                 ->dehydrated()
+                                                 ->required(), */
+
+                                    ])
+                                    ->columns(2),
+                                Group::make()
+                                    ->schema([
+                                        /*     DatePicker::make('data_preventivo')
+                                                ->displayFormat('d/m/Y')
+                                                ->default(Carbon::now())
+                                                ->disabled()
+                                                ->dehydrated(true)
+                                                ->label('Data Preventivo')
+                                                ->required(fn($livewire) => !$livewire->isDraft), */
 
                                         DatePicker::make('date_expiration')
                                             ->displayFormat('d/m/Y')
                                             ->label('Data Validità Preventivo')
                                             ->required(fn($livewire) => !$livewire->isDraft),
+                                        TextInput::make('titolo')
+                                            ->label('Titolo')
+                                            ->live()
+                                            ->dehydrated(fn($state) => $state != null)
+                                            ->maxLength(255)
+                                            ->required(fn($livewire) => !$livewire->isDraft),
                                     ])
                                     ->columns(2),
-                                TextInput::make('titolo')
-                                    ->label('Titolo')
-                                    ->live()
-                                    ->dehydrated(fn($state) => $state != null)
-                                    ->maxLength(255)
-                                    ->columnSpanFull()
-                                    ->required(fn($livewire) => !$livewire->isDraft),
                                 Group::make()
                                     ->schema([
 
-                                        Select::make('quote_request_id')
-                                            ->relationship('quote_request', 'oggetto', modifyQueryUsing: function ($query) {
-                                                if (auth()->user()->hasAnyRole(['admin', 'superadmin'])) {
-                                                    return $query->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA);
-                                                }
-                                                return $query->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA)
-                                                    ->where(function ($q) {
-                                                        $q->where('created_by', auth()->id())
-                                                            ->orWhereHas('agenti_gestori', function ($agentiQuery) {
-                                                                $agentiQuery->where('user_id', auth()->id());
-                                                            });
-                                                    });
-                                            })
-                                            ->preload()
-                                            ->hidden(fn(Get $get): bool => $get('tipo_preventivo') !== 'con_richiesta')
-                                            ->live(debounce: 500)
-                                            ->getSearchResultsUsing(function (string $search) {
-                                                return QuoteRequest::query()
-                                                    ->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA)
-                                                    ->where(function ($query) {
-                                                        $query->where('created_by', auth()->id())
-                                                            ->orWhereHas('agenti_gestori', function ($agentiQuery) {
-                                                                $agentiQuery->where('user_id', auth()->id());
-                                                            });
-                                                    })->where(function ($query) use ($search) {
-                                                        $query->where('oggetto', 'like', "%{$search}%")
-                                                            ->orWhere('id', 'like', "%{$search}%");
-                                                    })
-                                                    ->limit(50)
-                                                    ->get()
-                                                    ->mapWithKeys(function ($supplier) {
-                                                        return [
-                                                            $supplier->id => trim("{$supplier->nome} {$supplier->cognome}"),
-                                                        ];
-                                                    });
-                                            })
-                                            // quando cambia la richiesta, imposto il customer_id associato
-                                            ->afterStateUpdated(function ($state, Set $set) {
-                                                $req = QuoteRequest::find($state);
-                                                if ($req) {
-                                                    $set('customer_id', $req->customer_id);
-                                                    $set('meta_viaggio', $req->meta_viaggio);
-                                                }
-                                                if ($req && $req->customer?->email) {
-                                                    $set('email_cliente', $req->customer->email);
-                                                }
-                                            })
-                                            ->columnSpanfull()
-                                            ->label('Richiesta')
-                                            ->searchable()
-                                            ->getOptionLabelFromRecordUsing(fn(QuoteRequest $record) => "{$record->id} - {$record->oggetto}")
-                                            ->required(fn($livewire) => !$livewire->isDraft),
                                         TextInput::make('meta_viaggio')
                                             ->label('Meta')
                                             ->maxLength(255)
                                             ->required(fn($livewire) => !$livewire->isDraft),
-
-
-                                    ])
-                                    ->columns(2),
-                                Group::make()
-                                    ->schema([
-
-
                                         Select::make('customer_id')
                                             ->relationship('customer', 'nome', )
                                             ->preload()
                                             ->label('Cliente')
                                             ->searchable()
-                                            ->columnSpanfull()
                                             ->required(fn($livewire) => !$livewire->isDraft)
                                             ->getOptionLabelFromRecordUsing(
                                                 fn(Customer $record) =>
@@ -353,6 +332,63 @@ class PreventiveForm
                                     ])
                                     ->columns(2),
 
+
+
+                                Select::make('quote_request_id')
+                                    ->relationship('quote_request', 'oggetto', modifyQueryUsing: function ($query) {
+                                        if (auth()->user()->hasAnyRole(['admin', 'superadmin'])) {
+                                            return $query->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA);
+                                        }
+                                        return $query->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA)
+                                            ->where(function ($q) {
+                                                $q->where('created_by', auth()->id())
+                                                    ->orWhereHas('agenti_gestori', function ($agentiQuery) {
+                                                        $agentiQuery->where('user_id', auth()->id());
+                                                    });
+                                            });
+                                    })
+                                    ->preload()
+                                    ->hidden(fn(Get $get): bool => $get('tipo_preventivo') !== 'con_richiesta')
+                                    ->live(debounce: 500)
+                                    ->getSearchResultsUsing(function (string $search) {
+                                        return QuoteRequest::query()
+                                            ->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA)
+                                            ->where(function ($query) {
+                                                $query->where('created_by', auth()->id())
+                                                    ->orWhereHas('agenti_gestori', function ($agentiQuery) {
+                                                        $agentiQuery->where('user_id', auth()->id());
+                                                    });
+                                            })->where(function ($query) use ($search) {
+                                                $query->where('oggetto', 'like', "%{$search}%")
+                                                    ->orWhere('id', 'like', "%{$search}%");
+                                            })
+                                            ->limit(50)
+                                            ->get()
+                                            ->mapWithKeys(function ($supplier) {
+                                                return [
+                                                    $supplier->id => trim("{$supplier->nome} {$supplier->cognome}"),
+                                                ];
+                                            });
+                                    })
+                                    // quando cambia la richiesta, imposto il customer_id associato
+                                    ->afterStateUpdated(function ($state, Set $set) {
+                                        $req = QuoteRequest::find($state);
+                                        if ($req) {
+                                            $set('customer_id', $req->customer_id);
+                                            $set('meta_viaggio', $req->meta_viaggio);
+                                        }
+                                        if ($req && $req->customer?->email) {
+                                            $set('email_cliente', $req->customer->email);
+                                        }
+                                    })
+                                    ->columnSpanfull()
+                                    ->label('Richiesta')
+                                    ->searchable()
+                                    ->getOptionLabelFromRecordUsing(fn(QuoteRequest $record) => "{$record->id} - {$record->oggetto}")
+                                    ->required(fn($livewire) => !$livewire->isDraft),
+
+
+
                                 Group::make()
                                     ->schema([
                                         TextInput::make('numero_persone')
@@ -374,8 +410,9 @@ class PreventiveForm
                                             ->live(debounce: 500)
                                             ->required(fn($livewire) => !$livewire->isDraft)->afterStateUpdated(function ($state, Set $set, Get $get) {
                                                 if ($state) {
-                                                    $set('trasporto_andata.data_ora_partenza_andata', $state . ' 00:00:00');
-                                                    $set('trasporto_andata.data_ora_arrivo_andata', $state . ' 00:00:00');
+                                                    $date = Carbon::parse($state)->startOfDay()->format('Y-m-d H:i:s');
+                                                    $set('trasporto_andata.data_ora_partenza_andata', $date . ' 00:00:00');
+                                                    $set('trasporto_andata.data_ora_arrivo_andata', $date . ' 00:00:00');
 
                                                 }
                                             }),
@@ -386,8 +423,10 @@ class PreventiveForm
                                             ->required(fn($livewire) => !$livewire->isDraft)
                                             ->afterStateUpdated(function ($state, Set $set, Get $get) {
                                                 if ($state) {
-                                                    $set('trasporto_rientro.data_ora_partenza_rientro', $state . ' 00:00:00');
-                                                    $set('trasporto_rientro.data_ora_arrivo_rientro', $state . ' 00:00:00');
+                                                    $date = Carbon::parse($state)->startOfDay()->format('Y-m-d H:i:s');
+
+                                                    $set('trasporto_rientro.data_ora_partenza_rientro', $date . ' 00:00:00');
+                                                    $set('trasporto_rientro.data_ora_arrivo_rientro', $date . ' 00:00:00');
 
 
                                                 }
@@ -451,6 +490,21 @@ class PreventiveForm
                                             ->searchable()
                                             ->preload()
                                             ->required(fn($livewire) => !$livewire->isDraft)->live(debounce: 500)
+                                            ->afterStateUpdated(function ($state, Set $set) {
+                                                if (!$state)
+                                                    return;
+
+                                                $it = Itinerary::find($state);
+
+                                                if ($it) {
+                                                    $set('nome_itinerario', $it->nome);
+                                                    $set('itinerario', $it->itinerario ?? []);
+                                                } else {
+                                                    $set('nome_itinerario', null);
+                                                    $set('itinerario', []);
+                                                }
+
+                                            })
                                             ->createOptionForm([
                                                 TextInput::make('nome')->label('Nome')
                                                     ->columnSpanFull()
@@ -462,6 +516,7 @@ class PreventiveForm
                                                             ->columnSpanFull()
                                                             ->required(fn($livewire) => !$livewire->isDraft),
                                                         RichEditor::make('descrizione')
+                                                            ->json() // Forza l'uso del formato strutturato TipTap
                                                             ->toolbarButtons([
                                                                 'bold',
                                                                 'bulletList',
@@ -513,6 +568,8 @@ class PreventiveForm
                                                             ->columnSpanFull()
                                                             ->required(),
                                                         RichEditor::make('descrizione')
+                                                            ->json() // Forza l'uso del formato strutturato TipTap
+
                                                             ->toolbarButtons([
                                                                 'bold',
                                                                 'bulletList',
@@ -541,13 +598,7 @@ class PreventiveForm
                                                     ])
                                                     ->addActionLabel('Aggiungi itinerario')
                                                     ->columnSpanFull(),
-                                            ])
-                                            ->afterStateUpdated(function ($state, Set $set) {
-                                                $it = $state ? Itinerary::find(id: $state) : null;
-
-                                                $set('nome_itinerario', $it?->nome);
-                                                $set('itinerario', $it?->itinerario ?? []);
-                                            }),
+                                            ]),
                                     ]),
 
                                 TextInput::make('nome_itinerario')
@@ -560,6 +611,7 @@ class PreventiveForm
                                         TextInput::make('titolo')
                                             ->label('Titolo'),
                                         RichEditor::make('descrizione')
+                                            ->json() // Forza l'uso del formato strutturato TipTap
                                             ->toolbarButtons([
                                                 'bold',
                                                 'bulletList',
@@ -593,8 +645,8 @@ class PreventiveForm
                         ])
                             ->hidden(condition: fn(Get $get): bool => $get('gita_giornaliera') === true || $get('allego_file') === true)
                             ->schema([
-                                Placeholder::make('info_persone_forzate')
-                                    ->content(function (Get $get) {
+                                TextEntry::make('info_persone_forzate')
+                                    ->state(function (Get $get) {
                                         $persone = (int) $get('numero_persone');
                                         $forzate = (int) $get('n_persone_forzato');
 
@@ -1292,18 +1344,68 @@ class PreventiveForm
                                                             Group::make()
                                                                 ->schema([
 
-                                                                    DateTimePicker::make('data_ora_partenza_andata')
+
+                                                                    /* DateTimePicker::make('data_ora_partenza_andata')
                                                                         ->label('Data/Ora Partenza (Andata)')
                                                                         ->displayFormat('d/m/Y H:i')
                                                                         ->seconds(false)
-                                                                        ->required(fn($livewire) => !$livewire->isDraft),
-                                                                    DateTimePicker::make('data_ora_arrivo_andata')
-                                                                        ->label('Data/Ora Arrivo (Andata)')
-                                                                        ->displayFormat('d/m/Y H:i')
-                                                                        ->seconds(false)
-                                                                        ->required(fn($livewire) => !$livewire->isDraft),
 
-                                                                ])->columns(2),
+                                                                        ->required(fn($livewire) => !$livewire->isDraft), */
+                                                                    /*   Placeholder::make('data_inizio_viaggio')
+                                                                          ->label('Data Partenza')
+                                                                          ->content(function ($livewire) {
+                                                                              $inizio = $livewire->data['data_inizio_viaggio'] ?? null;
+                                                                              return $inizio ? Carbon::parse($inizio)->format('d/m/Y') : 'Non impostata';
+                                                                          })->extraAttributes([
+                                                                                  'class' => 'p-2 bg-gray-50 border border-gray-200 rounded-lg shadow-sm block w-full text-gray-500 ring-1 ring-gray-950/5'
+                                                                              ]), */
+                                                                    TextInput::make('data_inizio_viaggio_display')
+                                                                        ->label('Data Partenza')
+                                                                        ->placeholder(function (Get $get) {
+                                                                            // Usiamo Get invece di $livewire per evitare l'errore di inizializzazione
+                                                                            // Risaliamo l'albero: ../ (esce dal Group) ../ (esce dal Tab)
+                                                                            $inizio = $get('../data_inizio_viaggio');
+
+                                                                            return $inizio ? \Carbon\Carbon::parse($inizio)->format('d/m/Y') : 'Data non impostata';
+                                                                        })
+                                                                        ->disabled()
+                                                                        ->dehydrated(false),
+
+                                                                    TimePicker::make('data_ora_partenza_andata')
+                                                                        ->label('Orario Partenza (Andata)')
+                                                                        ->displayFormat('H:i')
+                                                                        ->seconds(false)
+                                                                        ->required(fn($livewire) => !$livewire->isDraft)
+                                                                        // Forza il salvataggio unendo l'ora alla data fissa
+                                                                        ->dehydrateStateUsing(function ($state, Get $get) {
+                                                                            if (!$state)
+                                                                                return null;
+                                                                            $dataInizio = $get('../data_inizio_viaggio');
+                                                                            return Carbon::parse($dataInizio)
+                                                                                ->setTimeFrom(Carbon::parse($state))
+                                                                                ->toDateTimeString();
+                                                                        }),
+                                                                    TimePicker::make('data_ora_arrivo_andata')
+                                                                        ->label('Orario Arrivo (Andata)')
+                                                                        ->displayFormat('H:i')
+                                                                        ->seconds(false)
+                                                                        ->required(fn($livewire) => !$livewire->isDraft)
+                                                                        // Forza il salvataggio unendo l'ora alla data fissa
+                                                                        ->dehydrateStateUsing(function ($state, Get $get) {
+                                                                            if (!$state)
+                                                                                return null;
+                                                                            $dataInizio = $get('../data_inizio_viaggio');
+                                                                            return Carbon::parse($dataInizio)
+                                                                                ->setTimeFrom(Carbon::parse($state))
+                                                                                ->toDateTimeString();
+                                                                        }),
+                                                                    /*  DateTimePicker::make('data_ora_arrivo_andata')
+                                                                         ->label('Data/Ora Arrivo (Andata)')
+                                                                         ->displayFormat('d/m/Y H:i')
+                                                                         ->seconds(false)
+                                                                         ->required(fn($livewire) => !$livewire->isDraft),
+  */
+                                                                ])->columns(3),
                                                             Group::make()
                                                                 ->schema([
                                                                     Select::make('tipo_trasporto')
@@ -1492,7 +1594,7 @@ class PreventiveForm
 
                                                             Group::make()
                                                                 ->schema([
-                                                                    DateTimePicker::make('data_ora_partenza_rientro')
+                                                                    /* DateTimePicker::make('data_ora_partenza_rientro')
                                                                         ->label('Data/Ora Partenza (Rientro)')
                                                                         ->seconds(false)
 
@@ -1505,8 +1607,53 @@ class PreventiveForm
                                                                             $fine = $livewire->data['data_fine_viaggio'] ?? null;
                                                                             return $fine ? \Carbon\Carbon::parse($fine) : null;
                                                                         })
-                                                                        ->required(fn($livewire) => !$livewire->isDraft),
-                                                                ])->columns(2),
+                                                                        ->required(fn($livewire) => !$livewire->isDraft), */
+                                                                    /*  Placeholder::make('data_fine_viaggio')
+                                                                         ->label('Data Rientro')
+                                                                         ->content(function ($livewire) {
+                                                                             $fine = $livewire->data['data_fine_viaggio'] ?? null;
+                                                                             return $fine ? Carbon::parse($fine)->format('d/m/Y') : 'Non impostata';
+                                                                         }), */
+                                                                    TextInput::make('data_fine_viaggio_display')
+                                                                        ->label('Data Rientro')
+                                                                        ->placeholder(function (Get $get) {
+                                                                            // Usiamo Get invece di $livewire per evitare l'errore di inizializzazione
+                                                                            // Risaliamo l'albero: ../ (esce dal Group) ../ (esce dal Tab)
+                                                                            $fine = $get('../data_fine_viaggio');
+
+                                                                            return $fine ? Carbon::parse($fine)->format('d/m/Y') : 'Data non impostata';
+                                                                        })
+                                                                        ->disabled()
+                                                                        ->dehydrated(false),
+                                                                    TimePicker::make('data_ora_partenza_rientro')
+                                                                        ->label('Orario Partenza (Rientro)')
+                                                                        ->displayFormat('H:i')
+                                                                        ->seconds(false)
+                                                                        ->required(fn($livewire) => !$livewire->isDraft)
+                                                                        // Forza il salvataggio unendo l'ora alla data fissa
+                                                                        ->dehydrateStateUsing(function ($state, Get $get) {
+                                                                            if (!$state)
+                                                                                return null;
+                                                                            $dataInizio = $get('../data_fine_viaggio');
+                                                                            return Carbon::parse($dataInizio)
+                                                                                ->setTimeFrom(Carbon::parse($state))
+                                                                                ->toDateTimeString();
+                                                                        }),
+                                                                    TimePicker::make('data_ora_arrivo_rientro')
+                                                                        ->label('Orario Arrivo (Rientro)')
+                                                                        ->displayFormat('H:i')
+                                                                        ->seconds(false)
+                                                                        ->required(fn($livewire) => !$livewire->isDraft)
+                                                                        // Forza il salvataggio unendo l'ora alla data fissa
+                                                                        ->dehydrateStateUsing(function ($state, Get $get) {
+                                                                            if (!$state)
+                                                                                return null;
+                                                                            $dataInizio = $get('../data_fine_viaggio');
+                                                                            return Carbon::parse($dataInizio)
+                                                                                ->setTimeFrom(Carbon::parse($state))
+                                                                                ->toDateTimeString();
+                                                                        }),
+                                                                ])->columns(3),
                                                             Group::make()
                                                                 ->schema([
                                                                     Select::make('tipo_trasporto')
@@ -1909,7 +2056,7 @@ class PreventiveForm
 
 
                                                 Select::make('tipo')
- ->required(fn($livewire) => !$livewire->isDraft)                                                    ->searchable()
+                                                    ->required(fn($livewire) => !$livewire->isDraft)->searchable()
                                                     ->label('Tipologia')
                                                     ->options(getIconsService()),
 
@@ -2313,7 +2460,7 @@ class PreventiveForm
                                                     ->label('Prezzo Forzato')
                                                     ->prefix('€')
                                                     ->numeric()
-                                                     ->required(fn($livewire) => !$livewire->isDraft),
+                                                    ->required(fn($livewire) => !$livewire->isDraft),
 
                                                 TextInput::make('n_persone_forzato')
                                                     ->label('N° Persone Forzato')
@@ -2641,9 +2788,9 @@ class PreventiveForm
                                             'Numero Gratuità' => $gratuite ?: '-',
                                             'Numero Paganti' => $paganti ?: '-',
                                             'Data Inizio Viaggio' => $pick('data_inizio_viaggio')
-                                                ? \Carbon\Carbon::parse($pick('data_inizio_viaggio'))->format('d-m-Y') : '-',
+                                                ? Carbon::parse($pick('data_inizio_viaggio'))->format('d-m-Y') : '-',
                                             'Data Fine Viaggio' => $pick('data_fine_viaggio')
-                                                ? \Carbon\Carbon::parse($pick('data_fine_viaggio'))->format('d-m-Y') : '-',
+                                                ? Carbon::parse($pick('data_fine_viaggio'))->format('d-m-Y') : '-',
                                         ];
 
                                         return [

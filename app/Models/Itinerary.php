@@ -8,7 +8,6 @@ class Itinerary extends Model
 {
      protected $casts = [
         'itinerario' => 'array',
-        'immagini' => 'array',
     ];
     public function preventives()
     {
