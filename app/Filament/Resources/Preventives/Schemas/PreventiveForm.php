@@ -2337,7 +2337,6 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
                                         //test
                             
                                         // -------- TOTALE SERVIZI --------
-                                        // -------- TOTALE SERVIZI --------
                                         $serviziTot = collect($extraServices)->reduce(function ($carry, $s) use ($nPartecipanti, $nPaganti) {
                                             // Gestisci sia array che oggetti
                                             $scorpora = is_array($s)
