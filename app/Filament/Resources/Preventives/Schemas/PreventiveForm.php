@@ -2,6 +2,11 @@
 
 namespace App\Filament\Resources\Preventives\Schemas;
 
+use App\Models\Email;
+use App\Models\EmailTemplate;
+use App\Models\ExtraService;
+use App\Models\Hotel;
+use App\Models\Preventive;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -670,7 +675,7 @@ class PreventiveForm
                                         if (!$hotelId)
                                             return null;
 
-                                        $hotel = \App\Models\Hotel::find($hotelId);
+                                        $hotel = Hotel::find($hotelId);
 
                                         if (!$hotel)
                                             return null;
@@ -688,7 +693,7 @@ class PreventiveForm
                                         );
                                     })
                                     ->itemLabel(fn(array $state): ?string => isset($state['hotel_id'])
-                                        ? optional(\App\Models\Hotel::find($state['hotel_id']))?->nome
+                                        ? optional(Hotel::find($state['hotel_id']))?->nome
                                         : 'Hotel')
                                     ->schema([
                                         Select::make('hotel_id')
@@ -1427,7 +1432,7 @@ class PreventiveForm
                                                                                 $set('misura_bg_a_mano', null);
                                                                             }
                                                                             $aziendaId = $get('transport_company_id');
-                                                                            $azienda = $aziendaId ? \App\Models\TransportCompany::find($aziendaId) : null;
+                                                                            $azienda = $aziendaId ? TransportCompany::find($aziendaId) : null;
 
                                                                             if ($state === 'aereo' && $azienda) {
                                                                                 $set('misura_bg_a_mano', $azienda->misura_bg_a_mano);
@@ -1443,7 +1448,7 @@ class PreventiveForm
 
                                                                         ->live(debounce: 500)
                                                                         ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                                                                            $azienda = $state ? \App\Models\TransportCompany::find($state) : null;
+                                                                            $azienda = $state ? TransportCompany::find($state) : null;
 
                                                                             // Controllo il tipo di trasporto
                                                                             if ($get('tipo_trasporto') === 'aereo' && $azienda) {
@@ -1676,7 +1681,7 @@ class PreventiveForm
                                                                                 $set('misura_bg_a_mano', null);
                                                                             }
                                                                             $aziendaId = $get('transport_company_id');
-                                                                            $azienda = $aziendaId ? \App\Models\TransportCompany::find($aziendaId) : null;
+                                                                            $azienda = $aziendaId ? TransportCompany::find($aziendaId) : null;
 
                                                                             if ($state === 'aereo' && $azienda) {
                                                                                 $set('misura_bg_a_mano', $azienda->misura_bg_a_mano);
@@ -1691,7 +1696,7 @@ class PreventiveForm
                                                                         ->preload()
                                                                         ->live(debounce: 500)
                                                                         ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                                                                            $azienda = $state ? \App\Models\TransportCompany::find($state) : null;
+                                                                            $azienda = $state ? TransportCompany::find($state) : null;
 
                                                                             // Controllo il tipo di trasporto
                                                                             if ($get('tipo_trasporto') === 'aereo' && $azienda) {
@@ -1837,455 +1842,76 @@ class PreventiveForm
                                     ->label('Note ad uso interno')
                                     ->columnSpanFull(),
                             ]), //fine trasporti
+
                         ValidatedTab::make('Servizi Extra', [
                             'extra_services',
                         ])
-                            ->hidden(condition: fn(Get $get): bool => $get('allego_file') === true)
-
+                            ->hidden(fn(Get $get) => $get('allego_file') === true)
                             ->schema([
                                 Repeater::make('extra_services')
                                     ->relationship('extra_services')
-                                    ->columns(2)
+                                    ->columns(3) // Layout più compatto
                                     ->collapsible()
                                     ->collapsed()
-                                    ->defaultItems(0)
                                     ->itemLabel(function (array $state): ?string {
-                                        // Ottieni il nome della tipologia dall'array delle icone
-                                        $tipoServizio = null;
-
-                                        // Se c'è un extra_service_id, mostra anche il nome
                                         if (!empty($state['extra_service_id'])) {
-                                            $extraService = \App\Models\ExtraService::find($state['extra_service_id']);
-
-                                            if ($extraService) {
-
-                                                return $tipoServizio = $extraService?->tipo;
-                                            }
-                                        }
-                                        if (!empty($state['tipo'])) {
-                                            return $state['tipo'];
+                                            $service = ExtraService::find($state['extra_service_id']);
+                                            return $service->nome ?? "Servizio #{$state['extra_service_id']}";
                                         }
 
-                                        // Fallback: nessuna label
-                                        return 'Servizio Extra';
-
-
-
+                                        return 'Nuovo Servizio Extra';
                                     })
-
                                     ->addActionLabel('Aggiungi servizio')
-                                    ->label('')
-                                    ->mutateRelationshipDataBeforeSaveUsing(function (array $data, ?\Illuminate\Database\Eloquent\Model $record): array|null {
-                                        // Se è completamente vuoto, non salvarlo
-                                        if (
-                                            blank($data['tipo']) &&
-                                            blank($data['tipo_costo']) &&
-                                            blank($data['prezzo'])
-                                        ) {
-                                            return null;
-                                        }
-
-                                        // Se manca tipo_costo, imposta default
-                                        if (blank($data['tipo_costo'])) {
-                                            $data['tipo_costo'] = 'a_persona';
-                                        }
-
-                                        // Se c'è un servizio associato (selezionato dall'utente), usa quello
-                                        if (!empty($data['extra_service_id'])) {
-                                            $extra = \App\Models\ExtraService::find($data['extra_service_id']);
-                                            if ($extra) {
-                                                $data['tipo'] = $extra->tipo;
-                                            }
-                                        } else if (!blank($data['tipo'])) {
-                                            // Cerca un servizio con questo tipo ma SENZA nome (servizio generico)
-                                            $service = \App\Models\ExtraService::where('tipo', $data['tipo'])
-                                                ->where(function ($q) {
-                                                $q->whereNull('nome')
-                                                    ->orWhere('nome', '')
-                                                    ->orWhere('nome', '');
-                                            })
-                                                ->first();
-
-                                            // Se non esiste, crealo al volo
-                                            if (!$service) {
-                                                $service = \App\Models\ExtraService::create([
-                                                    'tipo' => $data['tipo'],
-                                                    'nome' => null, // o ''
-                                                    'supplier_id' => $data['supplier_id'] ?? null,
-                                                ]);
-                                            }
-
-                                            $data['extra_service_id'] = $service->id;
-                                        }
-
-                                        // Non salvare mai il campo 'nome' separatamente
-                                        if (isset($data['nome'])) {
-                                            unset($data['nome']);
-                                        }
-
-                                        return $data;
-                                    })
-
                                     ->schema([
+
+                                        // 1. TIPOLOGIA (Usa le tue icone come filtro)
                                         Select::make('tipo')
-                                            ->required(fn($livewire) => !$livewire->isDraft)->label('Tipologia')
-                                            ->searchable()
+                                            ->label('Tipologia (Icona)')
                                             ->options(getIconsService())
-                                            ->dehydrated(true)
                                             ->live()
-                                            ->options(function (Get $get) {
-                                                $supplierId = $get('supplier_id');
+                                            ->afterStateUpdated(fn(Set $set) => $set('extra_service_id', null))
+                                            ->columnSpan(1),
 
-                                                // Se non c'è un fornitore selezionato, mostra tutte le tipologie
-                                                if (blank($supplierId)) {
-                                                    return getIconsService();
-                                                }
-
-                                                // Altrimenti mostra solo le tipologie associate a quel fornitore
-                                                $tipologie = \App\Models\ExtraService::where('supplier_id', $supplierId)
-                                                    ->distinct()
-                                                    ->pluck('tipo')
-                                                    ->filter()
-                                                    ->toArray();
-
-                                                // Filtra le opzioni di getIconsService() per mostrare solo quelle associate
-                                                $allOptions = getIconsService();
-
-                                                return collect($tipologie)
-                                                    ->mapWithKeys(function ($tipo) use ($allOptions) {
-                                                        return [$tipo => $allOptions[$tipo] ?? ucwords(str_replace('_', ' ', $tipo))];
-                                                    })
-                                                    ->toArray();
-                                            })
-                                            ->afterStateUpdated(function ($state, callable $set, Get $get) {
-                                                if (!empty($state)) {
-                                                    $set('extra_service_id', null);
-                                                    $supplierId = $get('supplier_id');
-
-                                                    // Cerca servizi generici (senza nome) per questa tipologia
-                                                    $query = \App\Models\ExtraService::where('tipo', $state)
-                                                        ->where(function ($q) {
-                                                        $q->whereNull('nome')
-                                                            ->orWhere('nome', '')
-                                                            ->orWhere('nome', '');
-                                                    })
-                                                        ->whereNotNull('descrizione_servizio')
-                                                        ->where('descrizione_servizio', '!=', '');
-
-                                                    if (!blank($supplierId)) {
-                                                        $query->where('supplier_id', $supplierId);
-                                                    }
-
-                                                    $service = $query->first();
-
-                                                    // Setta descrizione
-                                                    if ($service && $service->descrizione_servizio) {
-                                                        if (blank($get('descrizione_servizio'))) {
-                                                            $set('descrizione_servizio', $service->descrizione_servizio);
-                                                        }
-                                                    }
-
-                                                    // Setta fornitore se non è già selezionato
-                                                    if ($service && $service->supplier_id) {
-                                                        if (blank($get('supplier_id'))) {
-                                                            $set('supplier_id', $service->supplier_id);
-                                                        }
-                                                    }
-                                                } else {
-                                                    $set('extra_service_id', null);
-                                                    $set('supplier_id', null);
-                                                    $set('descrizione_servizio', null);
-                                                }
-                                            })
-                                            ->afterStateHydrated(function ($set, $state, $record) {
-                                                if ($record && $record->extra_service) {
-                                                    $set('tipo', $record->extra_service->tipo);
-                                                }
-                                            })
-                                            ->createOptionForm([
-                                                Select::make('supplier_id')
-                                                    ->label('Fornitore')
-                                                    ->searchable()
-                                                    ->preload()
-                                                    ->options(function () {
-                                                        return Supplier::query()
-                                                            ->orderBy('nome')
-                                                            ->orderBy('cognome')
-                                                            ->get()
-                                                            ->mapWithKeys(function ($supplier) {
-                                                                return [
-                                                                    $supplier->id => trim("{$supplier->nome} {$supplier->cognome}"),
-                                                                ];
-                                                            })
-                                                            ->toArray();
-                                                    })
-                                                    ->getSearchResultsUsing(function (string $search) {
-                                                        return Supplier::query()
-                                                            ->where(function ($query) use ($search) {
-                                                                $query->where('nome', 'like', "%{$search}%")
-                                                                    ->orWhere('cognome', 'like', "%{$search}%");
-                                                            })
-                                                            ->limit(50)
-                                                            ->get()
-                                                            ->mapWithKeys(function ($supplier) {
-                                                                return [
-                                                                    $supplier->id => trim("{$supplier->nome} {$supplier->cognome}"),
-                                                                ];
-                                                            });
-                                                    })
-                                                    ->getOptionLabelFromRecordUsing(fn(Supplier $record) => trim("{$record->nome} {$record->cognome}"))
-                                                    ->createOptionForm([
-                                                        TextInput::make('nome')
-                                                            ->required()
-                                                            ->maxLength(255),
-                                                        TextInput::make('cognome')
-                                                            ->required()
-                                                            ->maxLength(255),
-                                                        TextInput::make('ragione_sociale')
-                                                            ->maxLength(255),
-                                                        TextInput::make('piva_cf')
-                                                            ->label('P.Iva')
-                                                            ->maxLength(255),
-                                                        TextInput::make('codice_fiscale')
-                                                            ->label('Codice Fiscale')
-                                                            ->maxLength(255),
-                                                        TextInput::make('indirizzo')
-                                                            ->maxLength(255),
-                                                        // ... altri campi del fornitore
-                                                    ]),
-
-
-                                                Select::make('tipo')
-                                                    ->required(fn($livewire) => !$livewire->isDraft)->searchable()
-                                                    ->label('Tipologia')
-                                                    ->options(getIconsService()),
-
-                                                TextInput::make('nome')
-                                                    ->label('Nome Servizio')
-                                                    ->maxLength(255),
-                                                RichEditor::make('descrizione_servizio')
-                                                    ->toolbarButtons([
-                                                        'bold',
-                                                        'bulletList',
-                                                        'italic',
-                                                        'orderedList',
-                                                        'redo',
-                                                        'underline',
-                                                        'undo',
-                                                    ])
-                                                    ->label('Descrizione')
-                                                    ->columnSpanFull(),
-
-                                                FileUpload::make('allegati')
-                                                    ->multiple()
-                                                    ->maxSize(3072)
-                                                    ->acceptedFileTypes(['application/pdf'])
-                                                    ->preserveFilenames()
-                                                    ->directory('allegati_servizi')
-                                                    ->label('Allegati'),
-                                            ])
-                                            ->createOptionUsing(function (array $data, Get $get): string {
-
-                                                \App\Models\ExtraService::create([
-                                                    'supplier_id' => $data['supplier_id'] ?? null,
-                                                    'tipo' => $data['tipo'],
-                                                    'nome' => $data['nome'] ?? '',
-                                                    'descrizione_servizio' => $data['descrizione_servizio'] ?? null,  // ← AGGIUNGI QUESTO
-                                                    'allegati' => $data['allegati'] ?? null,
-                                                ]);
-
-                                                // Restituisci il TIPO (non l'ID) perché è questo il valore del campo Select
-                                                return $data['tipo'];
-                                            })
-                                            ->createOptionModalHeading('Crea Nuovo Servizio Extra'),
-
-
-                                        Select::make('supplier_id')
-                                            ->label('Fornitore')
-                                            ->searchable()
-                                            ->live()
-                                            ->options(function (Get $get) {
-                                                $tipo = $get('tipo');
-
-                                                // Se non c'è una tipologia selezionata, mostra tutti i fornitori
-                                                if (blank($tipo)) {
-                                                    return Supplier::query()
-                                                        ->orderBy('nome')
-                                                        ->orderBy('cognome')
-                                                        ->get()
-                                                        ->mapWithKeys(function ($supplier) {
-                                                            return [
-                                                                $supplier->id => trim("{$supplier->nome} {$supplier->cognome}"),
-                                                            ];
-                                                        })
-                                                        ->toArray();
-                                                }
-
-                                                // Altrimenti mostra solo i fornitori che hanno servizi di questa tipologia
-                                                $supplierIds = \App\Models\ExtraService::where('tipo', $tipo)
-                                                    ->whereNotNull('supplier_id')  // ← IMPORTANTE
-                                                    ->distinct()
-                                                    ->pluck('supplier_id')
-                                                    ->filter()
-                                                    ->toArray();
-
-                                                if (empty($supplierIds)) {
-                                                    // Nessun fornitore ha questa tipologia, mostra LISTA VUOTA
-                                                    return []; // ← CAMBIA QUI: ritorna array vuoto invece di tutti i fornitori
-                                                }
-
-                                                return Supplier::whereIn('id', $supplierIds)
-                                                    ->orderBy('nome')
-                                                    ->orderBy('cognome')
-                                                    ->get()
-                                                    ->mapWithKeys(function ($supplier) {
-                                                        return [
-                                                            $supplier->id => trim("{$supplier->nome} {$supplier->cognome}"),
-                                                        ];
-                                                    })
-                                                    ->toArray();
-                                            })
-
-                                            ->afterStateUpdated(function ($state, callable $set, Get $get) {
-                                                // Resetta solo l'extra_service_id
-                                                $set('extra_service_id', null);
-
-                                                // Se c'è un fornitore, carica dati dal servizio generico
-                                                if (!blank($state)) {
-                                                    $tipo = $get('tipo');
-
-                                                    if (!blank($tipo)) {
-                                                        $service = \App\Models\ExtraService::where('tipo', $tipo)
-                                                            ->where('supplier_id', $state)
-                                                            ->where(function ($q) {
-                                                                $q->whereNull('nome')
-                                                                    ->orWhere('nome', '')
-                                                                    ->orWhere('nome', '');
-                                                            })
-                                                            ->first(); // ← RIMOSSI i filtri su descrizione_servizio
-                                    
-                                                        if ($service) {
-                                                            // Setta descrizione se presente
-                                                            if ($service->descrizione_servizio) {
-                                                                $set('descrizione_servizio', $service->descrizione_servizio);
-                                                            }
-
-                                                            // Setta file se presenti
-                                                            if ($service->allegati) {
-                                                                $set('file_fornitore_servizi_extra', $service->allegati);
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            })
-                                            ->afterStateHydrated(function ($set, $state, $record, Get $get) {
-                                                // Carica il supplier_id dall'extra_service quando modifichi
-                                                if ($record && $record->extra_service && $record->extra_service->supplier_id) {
-                                                    $set('supplier_id', $record->extra_service->supplier_id);
-                                                }
-                                            })
-                                            ->dehydrated(false), // NON salvare in preventive_extra_services
-
-
+                                        // 2. NOME SERVIZIO (Il cuore della relazione)
                                         Select::make('extra_service_id')
-                                            ->label('Nome')
+                                            ->label('Nome Servizio')
+                                            ->required(fn($livewire) => !$livewire->isDraft)
+                                            ->searchable()
+                                            ->preload()
                                             ->live()
                                             ->options(function (Get $get) {
                                                 $tipo = $get('tipo');
-                                                $supplierId = $get('supplier_id');
+                                                $query = ExtraService::query();
 
-                                                if (blank($tipo)) {
-                                                    return [];
+                                                // Se l'utente ha scelto una tipologia, filtra i nomi
+                                                if ($tipo) {
+                                                    $query->where('tipo', $tipo);
                                                 }
 
-                                                $query = \App\Models\ExtraService::where('tipo', $tipo)
-                                                    ->whereNotNull('nome')
-                                                    ->where('nome', '<>', '')
-                                                    ->where('nome', '!=', '');
-
-                                                // Filtra anche per fornitore se selezionato
-                                                if (!blank($supplierId)) {
-                                                    $query->where('supplier_id', $supplierId);
-                                                }
-
-                                                return $query->pluck('nome', 'id')->toArray();
+                                                return $query->pluck('nome', 'id');
                                             })
-
-                                            ->afterStateUpdated(function ($state, callable $set, Get $get) {
-                                                // Quando selezioni un nome, carica descrizione E fornitore
-                                                if (!empty($state)) {
-                                                    $service = \App\Models\ExtraService::find($state);
-
-                                                    if ($service) {
-                                                        // Setta descrizione
-                                                        if ($service->descrizione_servizio) {
-                                                            $set('descrizione_servizio', $service->descrizione_servizio);
-                                                        }
-
-                                                        // Setta fornitore se non è già selezionato
-                                                        if ($service->supplier_id && blank($get('supplier_id'))) {
-                                                            $set('supplier_id', $service->supplier_id);
-                                                        }
-                                                    }
-                                                }
-                                            })
-                                            ->visible(function (Get $get, $state) {
-                                                $tipo = $get('tipo');
-                                                if (blank($tipo)) {
-                                                    return false;
-                                                }
-
-                                                $count = \App\Models\ExtraService::where('tipo', $tipo)
-                                                    ->whereNotNull('nome')
-                                                    ->where('nome', '<>', '')
-                                                    ->where('nome', '!=', '')
-                                                    ->count();
-
-                                                if ($count === 0) {
-                                                    return false;
-                                                }
-
+                                            ->afterStateUpdated(function ($state, Set $set) {
                                                 if ($state) {
-                                                    $service = \App\Models\ExtraService::find($state);
-                                                    return $service && !blank($service->nome);
-                                                }
-
-                                                return true;
-                                            })
-                                            ->afterStateHydrated(function ($set, $state, $record, Get $get) {
-                                                // Se il campo non dovrebbe essere visibile, azzera il valore
-                                                $tipo = $get('tipo');
-
-                                                if (blank($tipo)) {
-                                                    $set('extra_service_id', null);
-                                                    return;
-                                                }
-
-                                                $count = \App\Models\ExtraService::where('tipo', $tipo)
-                                                    ->whereNotNull('nome')
-                                                    ->where('nome', '<>', '')
-                                                    ->where('nome', '!=', '')
-                                                    ->count();
-
-                                                if ($count === 0) {
-                                                    $set('extra_service_id', null);
-                                                    return;
-                                                }
-
-                                                if ($state) {
-                                                    $service = \App\Models\ExtraService::find($state);
-                                                    if ($service && blank($service->nome)) {
-                                                        $set('extra_service_id', null);
-                                                    }
-                                                }
-
-                                                if ($record && $record->extra_service) {
-                                                    $set('tipo', $record->extra_service->tipo);
+                                                    $service = ExtraService::find($state);
+                                                    // Precompila la descrizione dal catalogo
+                                                    $set('descrizione_servizio', $service?->descrizione_servizio);
                                                 }
                                             })
-                                            ->dehydrated(true)
-                                            ->placeholder('Seleziona un nome')
-                                            ->searchable(),
+                                            // Permette di creare un nuovo servizio nel catalogo al volo
+                                            ->createOptionForm([
+                                                Select::make('tipo')
+                                                    ->options(getIconsService())
+                                                    ->required(),
+                                                TextInput::make('nome')
+                                                    ->required(),
+                                                RichEditor::make('descrizione_servizio'),
+                                            ])
+                                            ->createOptionUsing(function (array $data) {
+                                                return ExtraService::create($data)->id;
+                                            })
+                                            ->columnSpan(2),
+
+                                        // 3. DATI ECONOMICI (Salvati sulla tabella pivot)
                                         Select::make('tipo_costo')
                                             ->label('Tipo Costo')
                                             ->options([
@@ -2305,6 +1931,7 @@ class PreventiveForm
                                             ->required(fn($livewire) => !$livewire->isDraft),
 
                                         // Prezzo unitario
+
                                         TextInput::make('prezzo')
                                             ->label('Prezzo')
                                             ->prefix('€')
@@ -2321,7 +1948,8 @@ class PreventiveForm
 
                                             ->required(fn($livewire) => !$livewire->isDraft),
 
-                                        // Quantità: solo se "a_persona"
+
+
                                         TextInput::make('quantita_a_persona')
                                             ->label('Quantità (per persona)')
                                             ->numeric()
@@ -2332,39 +1960,30 @@ class PreventiveForm
                                             ->numeric()
                                             ->minValue(1)
                                             ->visible(fn(Get $get) => $get('tipo_costo') === 'una_tantum'),
-                                        Group::make()
-                                            ->schema([
-                                                Toggle::make('scorpora_servizio')
-                                                    ->label('Scorpora')
-                                                    ->inline(false)
-                                                    ->live(debounce: 500)
-                                                    ->afterStateUpdated(function (Set $set, Get $get) {
-                                                        $data = $get('../../');
 
-                                                        [$quota, $tot] = self::calcolaCostoPerPersona($data);
-
-                                                        $set('../../prezzo_per_persona', $quota);
-                                                        $set('../../totale_incasso', $tot);
-                                                    })
-
-                                            ])->columns(2),
-                                        // Informazioni aggiuntive
+                                        // 4. DETTAGLI (Salvati sulla tabella pivot)
                                         RichEditor::make('descrizione_servizio')
-                                            ->toolbarButtons([
-                                                'bold',
-                                                'bulletList',
-                                                'italic',
-                                                'orderedList',
-                                                'redo',
-                                                'underline',
-                                                'undo',
-                                            ])
-                                            ->label('Descrizione')
-                                            ->columnSpanFull(),
+                                            ->label('Descrizione Personalizzata')
+                                            ->columnSpanFull()
+                                            ->toolbarButtons(['bold', 'bulletList', 'italic', 'undo', 'redo']),
 
-                                        // La quota comprende
+                                        Toggle::make('scorpora_servizio')
+                                            ->label('Scorpora')
+                                            ->inline(false)
+                                            ->live(debounce: 500)
+                                            ->afterStateUpdated(function (Set $set, Get $get) {
+                                                $data = $get('../../');
+
+                                                [$quota, $tot] = self::calcolaCostoPerPersona($data);
+
+                                                $set('../../prezzo_per_persona', $quota);
+                                                $set('../../totale_incasso', $tot);
+                                            }),
+
+
                                         RichEditor::make('quota_comprende_servizi')
                                             ->label('La quota comprende')
+                                            ->columnSpanFull()
                                             ->toolbarButtons([
                                                 'bold',
                                                 'bulletList',
@@ -2373,10 +1992,10 @@ class PreventiveForm
                                                 'redo',
                                                 'underline',
                                                 'undo',
-                                            ])
-                                            ->columnSpan(2),
+                                            ]),
                                         RichEditor::make('quota_non_comprende_servizi')
                                             ->label('La quota non comprende')
+                                            ->columnSpanFull()
                                             ->toolbarButtons([
                                                 'bold',
                                                 'bulletList',
@@ -2385,8 +2004,7 @@ class PreventiveForm
                                                 'redo',
                                                 'underline',
                                                 'undo',
-                                            ])
-                                            ->columnSpan(2),
+                                            ]),
                                         FileUpload::make('file_fornitore_servizi_extra')
                                             ->disk('public')
                                             ->maxSize(3072)
@@ -2400,9 +2018,7 @@ class PreventiveForm
                                         Textarea::make('note')
                                             ->label('Note ad uso interno')
                                             ->columnSpanFull(),
-
-
-                                    ]),
+                                    ])
                             ]),
                         ValidatedTab::make('Riepilogo e Costi', [
                             'prezzo_per_persona',
@@ -2500,10 +2116,11 @@ class PreventiveForm
 
                                         // Helper: prendi dai record se esiste, altrimenti dal form
                                         $pick = function ($path, $default = null) use ($record, $form) {
-                                            $v = $record ? data_get($record, $path) : null;
-                                            if (!is_null($v) && $v !== '')
-                                                return $v;
                                             $v = data_get($form, $path);
+                                            if ((is_null($v) || $v === '') && $record) {
+                                                $v = data_get($record, $path);
+                                            }
+
                                             return $v ?? $default;
                                         };
 
@@ -2527,7 +2144,7 @@ class PreventiveForm
 
                                         // -------- HOTEL: dettagli e totale --------
                                         $hotelDettaglio = collect($hotelPreventives)->map(function ($hotel) {
-                                            $hotelNome = optional(\App\Models\Hotel::find($hotel['hotel_id'] ?? null))?->nome ?? '-';
+                                            $hotelNome = optional(Hotel::find($hotel['hotel_id'] ?? null))?->nome ?? '-';
                                             $rooms = collect($hotel['rooms_paganti'] ?? collect())
                                                 ->merge($hotel['rooms_gratuite'] ?? collect());
                                             if ($rooms->isEmpty())
@@ -2588,28 +2205,40 @@ class PreventiveForm
                                         // -------- TRASPORTI: dettagli e totale --------
                             
 
-                                        // -------- TRASPORTI: dettagli e totale --------
-                            
+
+
                                         // Partecipanti e paganti
                                         $nPartecipanti = max($persone, 1);
                                         $nPaganti = max($paganti, 1);
 
                                         // --- DETTAGLIO ANDATA/RIENTRO ---
+                                        /* Qui stai "impacchettando" i dati dei due trasporti in un unico contenitore.
+
+La Chiave ('Andata', 'Rientro') è l'etichetta che useremo nel testo del riepilogo.
+
+Il Valore ($traspAndata, $traspRientro) sono gli array (o oggetti) che contengono i prezzi e i tipi di costo.
+
+2. Il Ciclo Intelligente (->map(...))
+Il metodo map attraversa la collezione. La cosa fondamentale è che accetta due argomenti nella funzione:
+
+PHP
+function ($t, $tipoViaggio) ...
+$t: È il contenuto (i dati del trasporto). Nel primo giro sarà $traspAndata, nel secondo $traspRientro.
+
+$tipoViaggio: È la chiave dell'array. Laravel la passa automaticamente. Quindi varrà prima "Andata" e poi "Rientro". */
                                         $traspBlocks = collect([
                                             'Andata' => $traspAndata,
                                             'Rientro' => $traspRientro,
-                                        ])
-                                            ->filter(function ($t) {
-
-                                            if (!$t)
-                                                return false;
-                                            return !($t['scorpora_trasporto'] ?? false);
-                                        })
-                                            ->map(function ($t, $tipoViaggio) use ($nPartecipanti, $nPaganti) {
+                                        ])->map(function ($t, $tipoViaggio) use ($nPartecipanti, $nPaganti) {
+                                            $scorpora = $t['scorpora_trasporto'] ?? $t->scorpora_trasporto;
 
                                             $tipo = ucfirst($t['tipo_trasporto'] ?? 'N/D');
                                             $prezzo = $t['prezzo'] ?? 0;
                                             $tc = $t['tipo_costo'] ?? 'a persona';
+
+                                            if ($scorpora) {
+                                                return "<b>{$tipoViaggio}</b> = <span style='color: #ef4444; font-weight: bold;'>ESCLUSO (Scorporato)</span>";
+                                            }
 
                                             if ($tc === 'a persona') {
                                                 return "{$tipoViaggio}: {$tipo} × {$nPartecipanti} ({$tc}) → € {$prezzo}";
@@ -2658,26 +2287,45 @@ class PreventiveForm
 
 
                                         // -------- SERVIZI EXTRA: dettagli e totale --------
-                                        // -------- SERVIZI EXTRA: dettagli e totale --------
                                         $serviziDett = collect($extraServices)
-                                            ->filter(function ($s) {
-                                            // Gestisci sia array che oggetti
-                                            $scorpora = is_array($s)
-                                                ? ($s['scorpora_servizio'] ?? false)
-                                                : ($s->scorpora_servizio ?? false);
-                                            return !$scorpora;
-                                        })
                                             ->map(function ($s) use ($nPartecipanti, $nPaganti) {
                                             // Gestisci sia array che oggetti
-                                            $serviceId = is_array($s) ? ($s['extra_service_id'] ?? null) : ($s->extra_service_id ?? null);
-                                            $tipo = optional(\App\Models\ExtraService::find($serviceId))->tipo ?? '-';
-                                            $nome = optional(\App\Models\ExtraService::find($serviceId))->nome ?? '';
+                                            /* Esattamente. In Filament, la distinzione tra quando i dati sono un array e quando sono un oggetto è fondamentale per non far crashare l'applicazione.
 
-                                            $tc = is_array($s) ? ($s['tipo_costo'] ?? 'a_persona') : ($s->tipo_costo ?? 'a_persona');
-                                            $prezzo = is_array($s) ? ($s['prezzo'] ?? 0) : ($s->prezzo ?? 0);
+Ecco come funziona il "dietro le quinte":
+
+1. In fase di Creazione (CreateRecord)
+In questa fase il database non ha ancora visto nulla.
+
+Stato dei dati: Tutto quello che scrivi nel form vive temporaneamente nella memoria di Livewire come un array associativo.
+
+Accesso: Per leggere un valore devi usare la sintassi delle parentesi quadre: $data['prezzo'].
+
+Perché? Perché non esiste ancora un "Record" (una riga nella tabella del DB) a cui associare un oggetto Eloquent.
+
+2. In fase di Modifica (EditRecord)
+Qui il record esiste già nel database.
+
+Stato dei dati: Quando carichi la pagina, Filament recupera la riga dal DB e la trasforma in un Modello Eloquent (Oggetto).
+
+Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
+                                            $isArrray = is_array($s);
+                                            $serviceId = $isArrray ? ($s['extra_service_id'] ?? null) : ($s->extra_service_id ?? null);
+                                            $scorpora = $isArrray ? ($s['scorpora_servizio'] ?? false) : ($s->scorpora_servizio ?? false);
+
+                                            $service = ExtraService::find($serviceId);
+                                            $tipo = optional(ExtraService::find($serviceId))->tipo ?? '-';
+                                            $nome = $service ? ($service->nome ?: '-') : '';
+
+                                            if ($scorpora) {
+                                                return "<b>{$nome}</b> = <span style='color: #ef4444; font-weight: bold;'>ESCLUSO (Scorporato)</span>";
+                                            }
+
+                                            $tc = $isArrray ? ($s['tipo_costo'] ?? 'a_persona') : ($s->tipo_costo ?? 'a_persona');
+                                            $prezzo = $isArrray ? ($s['prezzo'] ?? 0) : ($s->prezzo ?? 0);
 
                                             if ($tc === 'a_persona') {
-                                                $q = is_array($s) ? (int) ($s['quantita_a_persona'] ?? 1) : (int) ($s->quantita_a_persona ?? 1);
+                                                $q = $isArrray ? (int) ($s['quantita_a_persona'] ?? 1) : (int) ($s->quantita_a_persona ?? 1);
                                                 return "{$tipo} {$nome} = € {$prezzo} (a persona × {$nPartecipanti} × {$q})";
                                             }
 
@@ -2714,17 +2362,55 @@ class PreventiveForm
 
                                             return $carry;
                                         }, 0);
-                                        $cleanHtml = fn($html) =>
-                                            trim(
+                                        $cleanHtml = function ($html) {
+                                            if (empty($html))
+                                                return '';
+
+                                            // Se è un array (molto probabile nel repeater), lo trasformiamo in stringa
+                                            if (is_array($html)) {
+                                                // Se è la struttura JSON di Tiptap convertita in array
+                                                if (isset($html['type']) && $html['type'] === 'doc') {
+                                                    // Estraiamo ricorsivamente tutto il testo dai nodi
+                                                    $extractText = function ($node) use (&$extractText) {
+                                                        $text = $node['text'] ?? '';
+                                                        if (isset($node['content'])) {
+                                                            foreach ($node['content'] as $child) {
+                                                                $text .= $extractText($child) . ' ';
+                                                            }
+                                                        }
+                                                        return $text;
+                                                    };
+                                                    $html = $extractText($html);
+                                                } else {
+                                                    // Altrimenti facciamo un implode brutale dei valori testuali
+                                                    $html = collect($html)->flatten()->filter(fn($v) => is_string($v))->implode(' ');
+                                                }
+                                            }
+
+                                            // Se è una stringa che contiene ancora il JSON "doc paragraph"
+                                            if (is_string($html) && (str_contains($html, '"type":"doc"') || str_contains($html, 'doc paragraph'))) {
+                                                // Tentiamo di pulire i nomi dei nodi JSON se il parsing è fallito
+                                                $html = preg_replace('/"type":"[^"]*"|"name":"[^"]*"|doc|paragraph|start|content|text|{|}|\d|\[|\]|:/i', '', $html);
+                                                $html = str_replace(['"', ','], '', $html);
+                                            }
+
+                                            // Infine, pulizia HTML classica
+                                            return trim(
                                                 preg_replace([
-                                                    '#<p><br></p>#i',     // elimina paragrafi vuoti
-                                                    '#<p>&nbsp;</p>#i',   // elimina paragrafi con spazio
-                                                    '#^\s*<br\s*/?>#i',   // elimina <br> all’inizio
-                                                    '#<\/p>\s*<p>#i',     // unisci paragrafi consecutivi
-                                                ], '', $html)
+                                                    '#<p><br></p>#i',
+                                                    '#<p>&nbsp;</p>#i',
+                                                    '#^\s*<br\s*/?>#i',
+                                                    '#<\/p>\s*<p>#i',
+                                                ], ' ', strip_tags((string) $html, '<b><i><strong>')) // strip_tags aiuta a pulire il resto
                                             );
+                                        };
 
                                         // -------- Quote comprende / non comprende --------
+                                        $cleanAndFilter = function ($item) use ($cleanHtml) {
+                                            $cleaned = $cleanHtml($item);
+                                            $hasContent = !empty($cleaned);
+                                            return $hasContent ? "<li>{$cleaned}</li>" : null;
+                                        };
                                         $quotaComprende = collect([
                                             ...collect($hotelPreventives)->pluck('quota_comprende_hotel')->filter()->toArray(),
                                             data_get($traspAndata, 'quota_comprende_trasporti'),
@@ -2732,7 +2418,8 @@ class PreventiveForm
                                             ...collect($traspIntermedi)->pluck('quota_comprende_trasporti')->filter()->toArray(),
                                             ...collect($extraServices)->pluck('quota_comprende_servizi')->filter()->toArray(),
                                             $pick('quota_comprende_generico'),
-                                        ])->filter()->map(fn($i) => "<li>" . $cleanHtml($i) . "</li>")->implode('');
+                                        ])->filter()->map($cleanAndFilter)// <--- QUI: Laravel prende ogni elemento dell'array e lo passa come $item
+                                            ->implode('');
 
                                         $quotaNonComprende = collect([
                                             ...collect($hotelPreventives)->pluck('quota_non_comprende_hotel')->filter()->toArray(),
@@ -2741,7 +2428,8 @@ class PreventiveForm
                                             ...collect($traspIntermedi)->pluck('quota_non_comprende_trasporti')->filter()->toArray(),
                                             ...collect($extraServices)->pluck('quota_non_comprende_servizi')->filter()->toArray(),
                                             $pick('quota_non_comprende_generico'),
-                                        ])->filter()->map(fn($i) => "<li>" . $cleanHtml($i) . "</li>")->implode('');
+                                        ])->filter()->map($cleanAndFilter)// <--- QUI: Laravel prende ogni elemento dell'array e lo passa come $item
+                                            ->implode('');
 
                                         // -------- Totale costi (hotel+trasporti+servizi) --------
                                         $totaleCosti = $hotelTot + $traspTot + $serviziTot;
@@ -2777,7 +2465,7 @@ class PreventiveForm
 
                                             // se è solo l'id, puoi opzionalmente caricarlo da DB
                                             if (is_numeric($customer)) {
-                                                $c = \App\Models\Customer::find($customer);
+                                                $c = Customer::find($customer);
                                                 return $c ? trim(($c->nome ?? '') . ' ' . ($c->cognome ?? '')) : '-';
                                             }
 
@@ -2910,13 +2598,13 @@ class PreventiveForm
                             ->schema([
                                 Select::make('email_template_id')
                                     ->label('Template Email')
-                                    ->options(\App\Models\EmailTemplate::pluck('nome', 'id'))
+                                    ->options(EmailTemplate::pluck('nome', 'id'))
                                     ->required(fn($livewire) => !$livewire->isDraft)
                                     ->searchable()
                                     ->preload()
                                     ->live()
                                     ->afterStateUpdated(function ($state, Set $set) {
-                                        if ($template = \App\Models\EmailTemplate::find($state)) {
+                                        if ($template = EmailTemplate::find($state)) {
                                             $set('corpo_email', $template->corpo_email);
                                         }
                                     })
@@ -2959,7 +2647,7 @@ class PreventiveForm
                                             ->required()
                                             ->columnSpanFull(),
                                     ])
-                                    ->createOptionUsing(fn(array $data) => \App\Models\EmailTemplate::create($data)->getKey()),
+                                    ->createOptionUsing(fn(array $data) => EmailTemplate::create($data)->getKey()),
 
                                 TextInput::make('email_cliente')
                                     ->label('Email Cliente')
@@ -3019,7 +2707,7 @@ class PreventiveForm
                                                         ->send();
                                                     return;
                                                 }
-                                                /** @var \App\Models\Preventive|null $preventivo */
+                                                /** @var Preventive|null $preventivo */
                                                 $preventivo = $livewire->record;
                                                 $formData = $livewire->form->getState();
 
@@ -3096,7 +2784,7 @@ class PreventiveForm
                                                     }
 
                                                     if ($hotelIds->isNotEmpty()) {
-                                                        $hotels = \App\Models\Hotel::whereIn('id', $hotelIds)->get();
+                                                        $hotels = Hotel::whereIn('id', $hotelIds)->get();
 
                                                         $hotelSenzaFoto = $hotels->filter(function ($hotel) {
                                                             $foto = $hotel->foto;
@@ -3146,7 +2834,7 @@ class PreventiveForm
                                                             if (!$hasRooms) {
                                                                 $hotelId = $hotelData['hotel_id'] ?? null;
                                                                 if ($hotelId) {
-                                                                    $hotel = \App\Models\Hotel::find($hotelId);
+                                                                    $hotel = Hotel::find($hotelId);
                                                                     $hotelSenzaStanze[] = $hotel?->nome ?? 'Hotel senza nome';
                                                                 }
                                                             }
@@ -3196,8 +2884,8 @@ class PreventiveForm
                                                         );
 
                                                         // Usa il metodo save() di Filament
-                                                        $livewire->form->model($preventivo ?? \App\Models\Preventive::class)->saveRelationships();
-                                                        $preventivo = $livewire->form->model(\App\Models\Preventive::class)->create($dataToSave);
+                                                        $livewire->form->model($preventivo ?? Preventive::class)->saveRelationships();
+                                                        $preventivo = $livewire->form->model(Preventive::class)->create($dataToSave);
                                                         $livewire->form->model($preventivo)->saveRelationships();
                                                         $livewire->record = $preventivo;
 
@@ -3283,7 +2971,7 @@ class PreventiveForm
                                                         'updated_at' => $email->updated_at,
                                                     ]);
                                                 } else {
-                                                    $email = \App\Models\Email::create([
+                                                    $email = Email::create([
                                                         'customer_id' => $preventivo->customer_id,
                                                         'sent_by' => $preventivo->created_by,
                                                         'email_template_id' => $emailDraft['email_template_id'],
@@ -3473,18 +3161,7 @@ class PreventiveForm
         return [$quota_individuale, $totale_incasso];
     }
 
-    public static function aggiornaQuoteLive(callable $set, callable $get): void
-    {
-        try {
-            $data = $get(); // prendo tutto lo stato del form (non triggera validazione)
-            [$quota, $tot] = self::calcolaCostoPerPersona($data);
 
-            $set('prezzo_per_persona', $quota);
-            $set('totale_incasso', $tot);
-        } catch (\Throwable $e) {
-            \Log::error('Errore in aggiornaQuoteLive: ' . $e->getMessage());
-        }
-    }
 
 }
 function getIconsService(): array

@@ -16,7 +16,7 @@ class CalendarPage extends Page
 {
 
     // Nome che apparirà nella sidebar
-    protected static ?string $navigationLabel = 'Calendario Viaggi';
+    protected static ?string $navigationLabel = 'Calendario';
 
     // Opzionale: ordinamento (es. mettila per prima)
     protected static ?int $navigationSort = 1;

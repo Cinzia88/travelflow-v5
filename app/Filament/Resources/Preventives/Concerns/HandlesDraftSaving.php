@@ -36,7 +36,9 @@ trait HandlesDraftSaving
 
     // Ora cerchiamo la bozza esistente
     $existingDraft = $preventivo->emails()->where('is_draft', true)->first();
+/* Se esiste già una bozza: Non crea mille email inutili, ma sovrascrive quella esistente con le ultime modifiche.
 
+Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella pivot) con il preventivo. */
     if ($existingDraft) {
         $existingDraft->update($emailCleanData);
     } else {
@@ -54,6 +56,7 @@ trait HandlesDraftSaving
     //dd($this->form->getRawState());
     // 1. Prendi tutti i dati dal form
     $data = $this->form->getState();
+
 
     DB::transaction(function () use ($data) {
         $preventivo = $this->record ?? new Preventive();
@@ -90,7 +93,7 @@ trait HandlesDraftSaving
         $this->form->model($this->record)->saveRelationships();
         
         // 6. SALVATAGGIO EMAIL (usiamo l'array filtrato al punto 2)
-        //$this->saveEmailDraft($this->record, $emailData);
+        $this->saveEmailDraft($this->record, $emailData);
     });
 
     Notification::make()->title('Bozza salvata!')->success()->send();
