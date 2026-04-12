@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('customer_id')->nullable()->constrained('customers')->cascadeOnDelete();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('tipo_richiesta')->nullable();
             $table->date('data_ricezione_richiesta')->nullable();
             $table->string('oggetto')->nullable();
             $table->string('email_cliente')->nullable();

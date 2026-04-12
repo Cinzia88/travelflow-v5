@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ExtraServices\Schemas;
 
 use App\Models\Supplier;
+use App\Services\ServiceIconProvider;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
@@ -216,7 +217,7 @@ class ExtraServiceForm
                     ->dehydrated(true)
                     ->searchable()
                     ->label('Tipologia')
-                    ->options(getIconsOptions()),
+                    ->options(fn() => ServiceIconProvider::getIconsService()),
                 TextInput::make('nome')
                     ->maxLength(255)
                     ->columnSpanFull(),

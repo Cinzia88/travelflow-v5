@@ -292,11 +292,6 @@ class QuoteRequestForm
                     ->default(QuoteRequestStatus::INVIATA->value)
                     ->live()
                     ->required(),
-                DatePicker::make('scadenza')
-                    ->disabled(fn() => !in_array(auth()->user()?->role?->nome, ['admin', 'superadmin']))
-                    ->displayFormat('d/m/Y')
-                    ->visibleOn('edit')
-                    ->label('Data Scadenza'),
 
                 Textarea::make('motivazione_archivio')
                     ->label('Motivazione Archiviazione')

@@ -2,19 +2,114 @@
 
 namespace App\Filament\Resources\QuoteRequests\Tables;
 
+use App\PreventiveStatus;
+use App\QuoteRequestStatus;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class QuoteRequestsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')
             ->columns([
+                TextColumn::make('id')
+                    ->searchable()
+                    ->label('Numero'),
+                TextColumn::make('created_by')
+                    ->searchable()
+                    ->limit(20)
+                    ->getStateUsing(function ($record) {
+                        if ($record->creator) {
+                            return "{$record->creator->nome} {$record->creator->cognome}";
+                        }
+                        return 'Agente Rimosso';
+                    })
+                    ->tooltip(fn($state, $record) => ($record->creator ? "{$record->creator->nome} {$record->creator->cognome}" : 'Agente Rimosso'))
+                    ->formatStateUsing(fn($state, $record) => $record->creator
+                        ? "{$record->creator->nome} {$record->creator->cognome}"
+                        : "Agente Rimosso")
+                    ->badge(fn($record) => !$record->creator)
+                    ->color(fn($record) => !$record->creator ? 'danger' : 'grey')
+                    ->label('Creata da'),
+                TextColumn::make('oggetto')
+                    ->searchable()
+                    ->label('Oggetto'),
+                TextColumn::make('tipo_richieste')
+                    ->label('Tipo di Richiesta')
+                    ->formatStateUsing(function ($state) {
+                        if (is_array($state)) {
+                            return implode(', ', $state);
+                        }
+                        return $state;
+                    }),
+                TextColumn::make('meta_viaggio')
+                    ->searchable()
+                    ->label('Meta'),
+                TextColumn::make('customer.nome')
+                    ->label('Cliente')
+                    ->formatStateUsing(fn($state, $record) => "{$record->customer?->nome} {$record->customer?->cognome}")
+                    ->tooltip(fn($state, $record) => "{$record->customer?->nome} {$record->customer?->cognome}")
+                    ->searchable(),
+                TextColumn::make('stato_richiesta')
+                    ->label('Stato Richiesta')
+                    ->badge(),
+                TextColumn::make('stato_preventivo')
+                    ->label('Stato Preventivo')
+                    ->getStateUsing(function ($record) {
+                        $preventivo = $record->preventives->last();
+                        if (!$preventivo?->stato) {
+                            return '-';
+                        }
+
+                        return match ($preventivo->stato) {
+                            PreventiveStatus::RIFIUTATO => 'Rifiutato',
+                            PreventiveStatus::IN_ATTESA => 'In attesa',
+                            PreventiveStatus::BOZZA => 'bozza',
+                            PreventiveStatus::ACCETTATO => 'Accettato',
+                            PreventiveStatus::INTERESSE_PIU_TEMPO => "L'offerta è di interesse, ma ho bisogno di più tempo",
+                            PreventiveStatus::SUPERIORE_BUDGET => "L'offerta risulta superiore al budget previsto",
+                            PreventiveStatus::OLTRE_TEMPI => "L'offerta è pervenuta oltre i tempi necessari alla valutazione",
+                            PreventiveStatus::NON_INTERESSA => "Il programma proposto non incontra i miei interessi",
+                            PreventiveStatus::DA_RIVEDERE => "Vorrei rivedere la proposta insieme a voi",
+                            PreventiveStatus::ALTRO => $preventivo->stato_altro_testo ?? 'Altro',
+                        };
+                    })
+                    ->badge()
+                    ->color(fn($record) => $record->preventives->last()?->stato?->getColor() ?? 'secondary')
+                    ->tooltip(function ($record) {
+                        $preventivo = $record->preventives->last();
+                        if (!$preventivo?->stato) {
+                            return '';
+                        }
+
+                        return match ($preventivo->stato) {
+                            PreventiveStatus::RIFIUTATO => 'Rifiutato',
+                            PreventiveStatus::IN_ATTESA => 'In attesa',
+                            PreventiveStatus::BOZZA => 'bozza',
+                            PreventiveStatus::ACCETTATO => 'Accettato',
+                            PreventiveStatus::INTERESSE_PIU_TEMPO => "L'offerta è di interesse, ma ho bisogno di più tempo",
+                            PreventiveStatus::SUPERIORE_BUDGET => "L'offerta risulta superiore al budget previsto",
+                            PreventiveStatus::OLTRE_TEMPI => "L'offerta è pervenuta oltre i tempi necessari alla valutazione",
+                            PreventiveStatus::NON_INTERESSA => "Il programma proposto non incontra i miei interessi",
+                            PreventiveStatus::DA_RIVEDERE => "Vorrei rivedere la proposta insieme a voi",
+                            PreventiveStatus::ALTRO => $preventivo->stato_altro_testo ?? 'Altro',
+                        };
+                    }),
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -25,12 +120,147 @@ class QuoteRequestsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Filter::make('data_ricezione_richiesta')
+                    ->form([
+                        DatePicker::make('from')
+                            ->label('Da'),
+                        DatePicker::make('until')
+                            ->label('A'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from'],
+                                fn(Builder $q, $date) => $q->whereDate('data_ricezione_richiesta', '>=', $date),
+                            )
+                            ->when(
+                                $data['until'],
+                                fn(Builder $q, $date) => $q->whereDate('data_ricezione_richiesta', '<=', $date),
+                            );
+                    }),
+                Filter::make('ultimo_mese')
+                    ->label('Ultimo mese')
+                    ->query(
+                        fn(Builder $query): Builder =>
+                        $query->where('data_ricezione_richiesta', '>=', now()->subMonth())
+                    ),
+                SelectFilter::make('tipo_richiesta')
+                    ->label('Tipo Richiesta')
+                    ->options([
+                        'Neve & Inverno' => [
+                            'settimana_bianca' => '❄️ Settimana Bianca',
+                            'mercatini' => '🎄 Mercatini di Natale',
+                        ],
+                        'Mare & Relax' => [
+                            'mare_italia' => '🇮🇹 Mare Italia',
+                            'mare_estero' => '🏝️ Mare Estero / Tropicale',
+                            'crociera' => '🚢 Crociera',
+                        ],
+                        'Grandi Viaggi' => [
+                            'tour_organizzato' => '🚩 Tour Organizzato',
+                            'on_the_road' => '🚗 On the Road / Fly & Drive',
+                            'avventura' => '🌋 Avventura & Trekking',
+                        ],
+                        'Speciali' => [
+                            'nozze' => '💍 Viaggio di Nozze',
+                            'wellness' => '🧖 SPA & Wellness',
+                            'business' => '💼 Business / Incentive',
+                        ],
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if (!filled($data['value'])) {
+                            return $query;
+                        }
+                        return $query->where('tipo_richiesta', $data['value']);
+                    }),
+                Filter::make('customer_nome')
+                    ->form([
+                        TextInput::make('q')
+                            ->label('Cliente (nome/cognome)'),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        $term = trim($data['q'] ?? '');
+                        return $query->when($term !== '', function (Builder $q) use ($term) {
+                            $q->whereHas('customer', function (Builder $c) use ($term) {
+                                $c->where(function (Builder $w) use ($term) {
+                                    $w->where('nome', 'like', "%{$term}%")
+                                        ->orWhere('cognome', 'like', "%{$term}%");
+                                });
+                            });
+                        });
+                    }),
+                Filter::make('email_cliente')
+                    ->form([
+                        TextInput::make('q')
+                            ->label('Email Cliente'),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        $term = trim($data['q'] ?? '');
+                        return $query->when($term !== '', function (Builder $q) use ($term) {
+                            $q->whereHas('customer', function (Builder $c) use ($term) {
+                                $c->where(function (Builder $w) use ($term) {
+                                    $w->where('email', 'like', "%{$term}%");
+                                });
+                            });
+                        });
+                    }),
+                Filter::make('meta_viaggio')
+                    ->form([
+                        TextInput::make('q')
+                            ->label('Meta Viaggio'),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        $term = trim($data['q'] ?? '');
+                        return $query->when(
+                            $term !== '',
+                            fn(Builder $q) =>
+                            $q->where('meta_viaggio', 'like', "%{$term}%")
+                        );
+                    }),
+
+                //  filtro per stato richiesta
+                SelectFilter::make('stato_richiesta')
+                    ->label('Stato Richiesta')
+                    ->options(QuoteRequestStatus::class)
+                    ->multiple(),
+
             ])
-            ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
-            ])
+            ->recordActions(
+                [
+                    ActionGroup::make([
+                        ViewAction::make()
+                            ->color('info')
+                            ->label('Visualizza Preventivo')
+                            ->visible(fn($record) => $record->stato_richiesta === QuoteRequestStatus::EVASA)
+                            ->openUrlInNewTab()
+                            ->icon('heroicon-o-globe-alt')
+                            ->extraAttributes(['target' => '_blank'])
+                            ->url(function ($record) {
+                                // Recupera il preventivo associato che NON sia in stato bozza
+                                $preventivo = $record->preventives()
+                                    ->where('stato', '!=', 'bozza')
+                                    ->latest()
+                                    ->first();
+
+                                if (!$preventivo) {
+                                    return null;
+                                }
+
+
+
+                                // Altrimenti, usa la rotta standard per visualizzare il preventivo
+                                return route('preventivo.show', ['cod_alfa' => $preventivo->cod_alfa]);
+                            }),
+
+                        ViewAction::make()
+                            ->modalHeading(fn($record): string => 'Visualizza Richiesta'),
+                        EditAction::make(),
+                        DeleteAction::make()
+                            ->modalHeading(fn($record): string => 'Elimina Richiesta'),
+                    ]),
+                ],
+                position: RecordActionsPosition::BeforeColumns
+            )
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

@@ -8,6 +8,7 @@ use App\Models\ExtraService;
 use App\Models\Hotel;
 use App\Models\Preventive;
 use App\Models\User;
+use App\Services\ServiceIconProvider;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -1867,7 +1868,7 @@ class PreventiveForm
                                         // 1. TIPOLOGIA (Usa le tue icone come filtro)
                                         Select::make('tipo')
                                             ->label('Tipologia (Icona)')
-                                            ->options(getIconsService())
+                                            ->options(fn() => ServiceIconProvider::getIconsService())
                                             ->live()
                                             ->afterStateUpdated(fn(Set $set) => $set('extra_service_id', null))
                                             ->columnSpan(1),
@@ -1900,7 +1901,7 @@ class PreventiveForm
                                             // Permette di creare un nuovo servizio nel catalogo al volo
                                             ->createOptionForm([
                                                 Select::make('tipo')
-                                                    ->options(getIconsService())
+                                                    ->options(fn() => ServiceIconProvider::getIconsService())
                                                     ->required(),
                                                 TextInput::make('nome')
                                                     ->required(),
@@ -3162,25 +3163,4 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
 
 
 
-}
-function getIconsService(): array
-{
-    $basePath = public_path('icone');
-    $options = [];
-
-    foreach (File::directories($basePath) as $directory) {
-        $category = basename($directory);
-        $categoryLabel = ucfirst($category);
-
-        foreach (File::files($directory) as $file) {
-            if ($file->getExtension() === 'png') {
-                $filename = ucfirst($file->getFilenameWithoutExtension());
-
-                // chiave = valore = quello che salvi in DB
-                $options[$categoryLabel][$filename] = $filename;
-            }
-        }
-    }
-
-    return $options;
 }
