@@ -2326,7 +2326,7 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
 
                                             if ($tc === 'a_persona') {
                                                 $q = $isArrray ? (int) ($s['quantita_a_persona'] ?? 1) : (int) ($s->quantita_a_persona ?? 1);
-                                                return "{$tipo} {$nome} = € {$prezzo} (a persona × {$nPartecipanti} × {$q})";
+                                                return ($nome != "" ? "$nome" : $tipo) . " = € {$prezzo} (a persona × {$nPartecipanti} × {$q})";
                                             }
 
                                             // UNA TANTUM
@@ -2563,7 +2563,7 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
 
                                                 'Totale costi' => '€ ' . number_format((int) $totaleCosti, 0, ',', '.'),
                                                 // --- Quota/Incasso (live) ---
-                                                'Prezzo per persona' => '€ ' . number_format($quotaInd, 2, ',', '.'),
+                                                'Prezzo per persona' => '€ ' . number_format($quotaInd, 0, ',', '.'),
                                                 'Totale incasso ' => '€ ' . number_format((int) $totIncasso, 0, ',', '.'),
 
                                                 // --- Comprende / Non comprende ---
