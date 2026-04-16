@@ -152,7 +152,6 @@ class PreventiveForm
                                                         }
                                                         // Quando viene disattivato (false), non fa nulla
                                                     })
-                                                    ->hidden(fn(Get $get): bool => $get('allego_file') === true)
                                                     ->default(false),
 
                                                 Actions::make([
@@ -443,7 +442,6 @@ class PreventiveForm
                                     ->schema([
                                         FileUpload::make('foto_introduttiva')
                                             ->image()
-                                            ->hidden(condition: fn(Get $get): bool => $get('allego_file') === true)
                                             ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
                                             ->required(fn($livewire) => !$livewire->isDraft)
                                             ->preserveFilenames()
@@ -464,7 +462,7 @@ class PreventiveForm
 
 
                                 Fieldset::make('Allegati')
-                                    ->visible(fn($get, $context) => $get('allego_file') === true || $context === 'edit')
+                                    ->visible(fn($get, $context) => $context === 'edit')
 
                                     ->schema([
 
@@ -485,7 +483,6 @@ class PreventiveForm
                             'nome_itinerario',
                             'itinerario',
                         ])
-                            ->hidden(condition: fn(Get $get): bool => $get('allego_file') === true)
 
                             ->schema([
                                 Group::make()
@@ -649,7 +646,7 @@ class PreventiveForm
                         ValidatedTab::make('Hotels/Alloggi', [
                             'hotel_preventives',
                         ])
-                            ->hidden(condition: fn(Get $get): bool => $get('gita_giornaliera') === true || $get('allego_file') === true)
+                            ->hidden(condition: fn(Get $get): bool => $get('gita_giornaliera') === true)
                             ->schema([
                                 TextEntry::make('info_persone_forzate')
                                     ->state(function (Get $get) {
@@ -1325,7 +1322,6 @@ class PreventiveForm
                             'trasporto_andata',
                             'trasporto_rientro',
                         ])
-                            ->hidden(condition: fn(Get $get): bool => $get('allego_file') === true)
 
                             ->schema([
                                 Tabs::make('Tabs')
@@ -1847,7 +1843,7 @@ class PreventiveForm
                         ValidatedTab::make('Servizi Extra', [
                             'extra_services',
                         ])
-                            ->hidden(fn(Get $get) => $get('allego_file') === true)
+                          
                             ->schema([
                                 Repeater::make('extra_services')
                                     ->relationship('extra_services')
@@ -2030,7 +2026,7 @@ class PreventiveForm
                         ])
                             ->hidden(
                                 fn(Get $get, string $operation): bool =>
-                                $get('allego_file') === true ||
+                               
                                 $operation === 'create'
                             )
                             ->schema([

@@ -25,7 +25,6 @@ return new class extends Migration
             $table->string('meta_viaggio')->nullable();
             $table->string('nome_itinerario')->nullable();
             $table->boolean('gita_giornaliera')->nullable();
-            $table->boolean('allego_file')->nullable();
             $table->json('itinerario')->nullable();
             $table->string('email_cliente')->nullable();
             $table->integer('numero_persone')->nullable();

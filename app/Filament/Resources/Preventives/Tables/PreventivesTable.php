@@ -270,6 +270,16 @@ class PreventivesTable
             ])
             ->recordActions([
                 ActionGroup::make([
+                     Action::make('scaricaPdf')
+                        ->label('Scarica PDF')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->url(function ($record) {
+                            
+
+                            // Altrimenti apri la pagina normale con il link
+                            return route('preventivi.pdf', $record);
+                        })
+                        ->openUrlInNewTab(),
                     Action::make('duplicate')
                         ->label('Duplica')
                         ->icon('heroicon-o-document-duplicate')
