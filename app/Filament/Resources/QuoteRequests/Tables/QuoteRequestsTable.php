@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\QuoteRequests\Tables;
 
+use App\Filament\Resources\QuoteRequests\Schemas\QuoteRequestForm;
 use App\PreventiveStatus;
 use App\QuoteRequestStatus;
 use Filament\Actions\ActionGroup;
@@ -48,13 +49,27 @@ class QuoteRequestsTable
                 TextColumn::make('oggetto')
                     ->searchable()
                     ->label('Oggetto'),
-                TextColumn::make('tipo_richieste')
+                    /* 1. array_values(...)
+Questo comando prende il tuo array multidimensionale QuoteRequestForm::getOpzioniRichiesta() e scarta le chiavi di primo livello (ovvero le categorie: 'Neve & Inverno', 'Mare & Relax', ecc.).
+Ti ritrovi con un array che contiene solo gli array interni (i "gruppi").
+
+2. ... (Operatore di Unpacking / Splat)
+I tre puntini (...) prima di array_values sono fondamentali. Dicono a PHP: "Prendi tutti gli elementi dentro questo array e passali come argomenti separati alla funzione successiva".
+Senza questo, array_merge riceverebbe un unico array (quello con i gruppi), mentre con i tre puntini riceve tanti array singoli, uno per ogni categoria.
+
+3. array_merge(...)
+Questa funzione prende tutti gli array che gli abbiamo passato (grazie allo splat operator) e li fonde in un unico grande array piatto.
+Il risultato finale di queste tre operazioni è questo:[
+    'settimana_bianca' => '❄️ Settimana Bianca',
+    'mercatini' => '🎄 Mercatini di Natale',
+    'mare_italia' => '🇮🇹 Mare Italia',
+    // ... tutte le altre voci fuse insieme
+] */
+                TextColumn::make('tipo_richiesta')
                     ->label('Tipo di Richiesta')
                     ->formatStateUsing(function ($state) {
-                        if (is_array($state)) {
-                            return implode(', ', $state);
-                        }
-                        return $state;
+                        $options = array_merge(...array_values(QuoteRequestForm::getOpzioniRichiesta()));
+                        return $options[$state] ?? $state;
                     }),
                 TextColumn::make('meta_viaggio')
                     ->searchable()

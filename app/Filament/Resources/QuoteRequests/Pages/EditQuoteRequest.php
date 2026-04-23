@@ -10,7 +10,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditQuoteRequest extends EditRecord
 {
     protected static string $resource = QuoteRequestResource::class;
-
+protected static ?string $title = 'Modifica Richiesta Interna';
     protected function getHeaderActions(): array
     {
         return [

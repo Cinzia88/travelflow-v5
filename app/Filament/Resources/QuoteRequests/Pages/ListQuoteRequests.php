@@ -8,6 +8,7 @@ use Filament\Resources\Pages\ListRecords;
 
 class ListQuoteRequests extends ListRecords
 {
+    protected static ?string $title = 'Richieste Interne';
     protected static string $resource = QuoteRequestResource::class;
 
     protected function getHeaderActions(): array

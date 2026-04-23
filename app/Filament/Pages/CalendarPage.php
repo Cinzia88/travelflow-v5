@@ -20,9 +20,8 @@ class CalendarPage extends Page
 
     // Opzionale: ordinamento (es. mettila per prima)
     protected static ?int $navigationSort = 1;
-
+    protected static ?string $title = 'Calendario Preventivi';
     protected string $view = 'filament.pages.calendar-page';
-
     protected function getHeaderActions(): array
     {
         return [
@@ -71,10 +70,11 @@ class CalendarPage extends Page
                 ->action(function (array $data) {
                     $inizio = Carbon::parse($data['start_time']);
                     $fine = Carbon::parse($data['end_time']);
+                    $finegoogle = $fine->copy()->addDay(); // Aggiungi un giorno alla data di fine per renderla inclusiva
                     $googleEvent = \Spatie\GoogleCalendar\Event::create([
                         'name' => $data['title'],
                         'startDate' => $inizio,
-                        'endDate' => $fine,
+                        'endDate' => $finegoogle,
                         'description' => $data['description'] ?? '',
                         'colorId' => $data['color_id'],
                     ]);
@@ -112,6 +112,74 @@ class CalendarPage extends Page
                         ->send();
                     $this->js('window.location.reload();');
                 }),
+            Action::make('modifica-evento')
+                ->label('Modifica Evento')
+                ->icon('heroicon-m-pencil')
+                ->color('warning')
+                ->modalHeading('Modifica Evento')
+                ->form([
+                    Select::make('event_id')
+                        ->label('Seleziona evento da modificare')
+                        ->options(Event::query()->pluck('title', 'id'))
+                        ->searchable()
+                        ->required()
+                        ->reactive() // Rende il form reattivo alla selezione
+                        ->afterStateUpdated(function ($state, $set) {
+                            // Questa funzione popola i campi quando selezioni l'evento
+                            $evento = Event::find($state);
+                            if ($evento) {
+                                $set('title', $evento->title);
+                                $set('description', $evento->description);
+                                $set('start_time', $evento->start_time->format('Y-m-d'));
+                                $set('end_time', $evento->end_time->format('Y-m-d'));
+                                $set('color_id', '9'); // Opzionale: gestire anche il colore se salvato
+                            }
+                        }),
+                    TextInput::make('title')->label('Nome Evento')->required(),
+                    Textarea::make('description')->label('Descrizione')->rows(3),
+                    DatePicker::make('start_time')->label('Data Inizio')->native(false)->required(),
+                    DatePicker::make('end_time')->label('Data Fine')->native(false)->required(),
+                ])
+                ->action(function (array $data) {
+                    $evento = Event::find($data['event_id']);
+
+                    // 1. Calcoli le date
+                    $inizio = Carbon::parse($data['start_time']);
+                    $fine = Carbon::parse($data['end_time']);
+                    $fineGoogle = $fine->copy()->addDay(); // Manteniamo la logica inclusiva
+        
+                    // 2. Aggiornamento su Google Calendar
+                    if ($evento->google_event_id) {
+                        try {
+                            $googleEvent = \Spatie\GoogleCalendar\Event::find($evento->google_event_id);
+                            if ($googleEvent) {
+                                $googleEvent->update([
+                                    'name' => $data['title'],
+                                    'startDate' => $inizio,
+                                    'endDate' => $fineGoogle,
+                                    'description' => $data['description'] ?? '',
+                                ]);
+                            }
+                        } catch (\Throwable $th) {
+                            Notification::make()->title('Errore Google')->body('Impossibile aggiornare su Google Calendar')->danger()->send();
+                        }
+                    }
+
+                    // 3. Aggiornamento Database Locale
+                    $evento->update([
+                        'title' => $data['title'],
+                        'description' => $data['description'],
+                        'start_time' => $inizio,
+                        'end_time' => $fine,
+                    ]);
+
+                    Notification::make()
+                        ->title('Evento aggiornato!')
+                        ->success()
+                        ->send();
+
+                    $this->js('window.location.reload();');
+                }),
             Action::make('elimina_evento')
                 ->label('Elimina Evento')
                 ->color('danger')
@@ -132,12 +200,13 @@ class CalendarPage extends Page
                     $evento = Event::find($data['event_id']);
 
 
+
                     if (!$evento)
                         return;
 
-                    if ($evento->google->id) {
+                    if ($evento->google_event_id) {
                         try {
-                            $googleEvent = \Spatie\GoogleCalendar\Event::find($evento->google->id);
+                            $googleEvent = \Spatie\GoogleCalendar\Event::find($evento->google_event_id);
                             if ($googleEvent) {
                                 $googleEvent->delete();
                             }

@@ -26,6 +26,28 @@ use Filament\Tables\Enums\RecordActionsPosition;
 
 class PreventivesTable
 {
+    public static function getStatePreventive(Preventive $preventivo): array
+    {/* 2. Perché non puoi farne a meno
+Se provassi a scrivere questo nel tuo codice:
+
+PHP
+$array = [
+    PreventiveStatus::RIFIUTATO => 'Rifiutato', // SENZA ->value
+];
+PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un array possono essere solo stringhe o numeri, non oggetti. */
+        return [
+            PreventiveStatus::RIFIUTATO->value => 'Rifiutato',
+            PreventiveStatus::IN_ATTESA->value => 'In attesa',
+            PreventiveStatus::BOZZA->value => 'bozza',
+            PreventiveStatus::ACCETTATO->value => 'Accettato',
+            PreventiveStatus::INTERESSE_PIU_TEMPO->value => "L'offerta è di interesse, ma ho bisogno di più tempo",
+            PreventiveStatus::SUPERIORE_BUDGET->value => "L'offerta risulta superiore al budget previsto",
+            PreventiveStatus::OLTRE_TEMPI->value => "L'offerta è pervenuta oltre i tempi necessari alla valutazione",
+            PreventiveStatus::NON_INTERESSA->value => "Il programma proposto non incontra i miei interessi",
+            PreventiveStatus::DA_RIVEDERE->value => "Vorrei rivedere la proposta insieme a voi",
+            PreventiveStatus::ALTRO->value => $preventivo->stato_altro_testo ?? 'Altro',
+        ];
+    }
     public static function configure(Table $table): Table
     {
         return $table
@@ -40,25 +62,25 @@ class PreventivesTable
                     ->tooltip(fn($state, $record) => "{$record->customer?->nome} {$record->customer?->cognome}")
                     ->searchable(),
 
-                TextColumn::make('created_by')
-                    ->label('Creato da')
-                    ->getStateUsing(function ($record) {
-                        if ($record->creator) {
-                            return "{$record->creator->nome} {$record->creator->cognome}";
-                        }
-                        return 'Agente Rimosso';
-                    })
-                    ->color(fn($record) => !$record->creator ? 'danger' : 'grey')
-                    ->searchable()
-                    ->badge(fn($record) => !$record->creator)
-                    ->limit(20)
-                    ->tooltip(fn($record) => $record->creator
-                        ? "{$record->creator->nome} {$record->creator->cognome}"
-                        : 'Agente Rimosso'),
-                /*   TextColumn::make('quote_request.agenti_gestori')
-                     ->getStateUsing(fn($record) => $record->quote_request?->agenti_gestori?->map(fn($u) => "{$u->nome} {$u->cognome}"))
-                     ->label('Gestore'),*/
-
+                /*  TextColumn::make('created_by')
+                     ->label('Creato da')
+                     ->getStateUsing(function ($record) {
+                         if ($record->creator) {
+                             return "{$record->creator->nome} {$record->creator->cognome}";
+                         }
+                         return 'Agente Rimosso';
+                     })
+                     ->color(fn($record) => !$record->creator ? 'danger' : 'grey')
+                     ->searchable()
+                     ->badge(fn($record) => !$record->creator)
+                     ->limit(20)
+                     ->tooltip(fn($record) => $record->creator
+                         ? "{$record->creator->nome} {$record->creator->cognome}"
+                         : 'Agente Rimosso'),
+                 /*   TextColumn::make('quote_request.agenti_gestori')
+                      ->getStateUsing(fn($record) => $record->quote_request?->agenti_gestori?->map(fn($u) => "{$u->nome} {$u->cognome}"))
+                      ->label('Gestore'),
+  */
 
                 TextColumn::make('titolo')
                     ->label('Titolo')
@@ -108,35 +130,19 @@ class PreventivesTable
                         };
                     }) */
                     ->formatStateUsing(function ($state, $record): string {
-                        return match ($state) {
-                            PreventiveStatus::RIFIUTATO => 'Rifiutato',
-                            PreventiveStatus::IN_ATTESA => 'In attesa',
-                            PreventiveStatus::BOZZA => 'bozza',
-                            PreventiveStatus::ACCETTATO => 'Accettato',
-                            PreventiveStatus::INTERESSE_PIU_TEMPO => "L'offerta è di interesse, ma ho bisogno di più tempo",
-                            PreventiveStatus::SUPERIORE_BUDGET => "L'offerta risulta superiore al budget previsto",
-                            PreventiveStatus::OLTRE_TEMPI => "L'offerta è pervenuta oltre i tempi necessari alla valutazione",
-                            PreventiveStatus::NON_INTERESSA => "Il programma proposto non incontra i miei interessi",
-                            PreventiveStatus::DA_RIVEDERE => "Vorrei rivedere la proposta insieme a voi",
-                            PreventiveStatus::ALTRO => $preventivo->stato_altro_testo ?? 'Altro',
-                            default => $record->stato?->value ?? '',
-                        };
+                        // Se $state è un oggetto Enum, prendiamo il suo valore (stringa/int)
+                        $value = ($state instanceof \BackedEnum) ? $state->value : $state;
+
+                        $options = self::getStatePreventive($record);
+                        //$array[chiave]
+                        return $options[$value] ?? $value;
                     })
                     ->limit(20)
-                    ->tooltip(function ($record) {
-                        return match ($record->stato) {
-                            PreventiveStatus::RIFIUTATO => 'Rifiutato',
-                            PreventiveStatus::IN_ATTESA => 'In attesa',
-                            PreventiveStatus::BOZZA => 'bozza',
-                            PreventiveStatus::ACCETTATO => 'Accettato',
-                            PreventiveStatus::INTERESSE_PIU_TEMPO => "L'offerta è di interesse, ma ho bisogno di più tempo",
-                            PreventiveStatus::SUPERIORE_BUDGET => "L'offerta risulta superiore al budget previsto",
-                            PreventiveStatus::OLTRE_TEMPI => "L'offerta è pervenuta oltre i tempi necessari alla valutazione",
-                            PreventiveStatus::NON_INTERESSA => "Il programma proposto non incontra i miei interessi",
-                            PreventiveStatus::DA_RIVEDERE => "Vorrei rivedere la proposta insieme a voi",
-                            PreventiveStatus::ALTRO => $preventivo->stato_altro_testo ?? 'Altro',
-                            default => $record->stato?->value ?? '',
-                        };
+                    ->tooltip(function ($record, $state) {
+                        $value = ($state instanceof \BackedEnum) ? $state->value : $state;
+
+                        $options = self::getStatePreventive($record);
+                        return $options[$value] ?? $value;
                     })
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -268,97 +274,99 @@ class PreventivesTable
                     ->multiple(),
 
             ])
-            ->recordActions([
-                ActionGroup::make([
-                     Action::make('scaricaPdf')
-                        ->label('Scarica PDF')
-                        ->icon('heroicon-o-document-arrow-down')
-                        ->url(function ($record) {
-                            
-
-                            // Altrimenti apri la pagina normale con il link
-                            return route('preventivi.pdf', $record);
-                        })
-                        ->openUrlInNewTab(),
-                    Action::make('duplicate')
-                        ->label('Duplica')
-                        ->icon('heroicon-o-document-duplicate')
-                        ->color('gray')
-                        ->label('Duplica Preventivo')
-                        ->requiresConfirmation()
-                        ->action(function ($record) {
-                            $new = $record->duplicateWithRelations();
-                            $url = PreventiveResource::getUrl('edit', parameters: ['record' => $new]);
+            ->recordActions(
+                [
+                    ActionGroup::make([
+                        Action::make('scaricaPdf')
+                            ->label('Scarica PDF')
+                            ->icon('heroicon-o-document-arrow-down')
+                            ->url(function ($record) {
 
 
-                            Notification::make()
-                                ->title('Preventivo duplicato con successo!')
-                                ->body("È stata creata una copia: {$new->tag}")
-                                ->success()
-                                ->send();
+                                // Altrimenti apri la pagina normale con il link
+                                return route('preventivi.pdf', $record);
+                            })
+                            ->openUrlInNewTab(),
+                        Action::make('duplicate')
+                            ->label('Duplica')
+                            ->icon('heroicon-o-document-duplicate')
+                            ->color('gray')
+                            ->label('Duplica Preventivo')
+                            ->requiresConfirmation()
+                            ->action(function ($record) {
+                                $new = $record->duplicateWithRelations();
+                                $url = PreventiveResource::getUrl('edit', parameters: ['record' => $new]);
 
-                            return redirect($url);
-                        }),
-                       
-                    /* Action::make('scaricaPdf')
-                        ->label('Scarica PDF')
-                        ->icon('heroicon-o-document-arrow-down')
-                        ->visible(
-                            fn($record) =>
-                            auth()->user()->hasAnyRole(['admin', 'superadmin']) ||
-                            (auth()->user()->hasRole('agente') && $record->created_by === auth()->id())
-                        )
-                        ->url(function ($record) {
-                            // Se allego_file è true, apri la rotta che mostra il file inline
-                            if ($record->allego_file) {
-                                return route('preventivo.download.allegato', ['cod_alfa' => $record->cod_alfa]);
+
+                                Notification::make()
+                                    ->title('Preventivo duplicato con successo!')
+                                    ->body("È stata creata una copia: {$new->tag}")
+                                    ->success()
+                                    ->send();
+
+                                return redirect($url);
+                            }),
+
+                        /* Action::make('scaricaPdf')
+                            ->label('Scarica PDF')
+                            ->icon('heroicon-o-document-arrow-down')
+                            ->visible(
+                                fn($record) =>
+                                auth()->user()->hasAnyRole(['admin', 'superadmin']) ||
+                                (auth()->user()->hasRole('agente') && $record->created_by === auth()->id())
+                            )
+                            ->url(function ($record) {
+                                // Se allego_file è true, apri la rotta che mostra il file inline
+                                if ($record->allego_file) {
+                                    return route('preventivo.download.allegato', ['cod_alfa' => $record->cod_alfa]);
+                                }
+
+                                // Altrimenti apri la pagina normale con il link
+                                return route('preventivi.pdf', $record);
+                            })
+                            ->openUrlInNewTab(), */
+                        ViewAction::make()
+                            ->icon('heroicon-o-globe-alt')
+                            ->disabled(false)
+                            ->label('Visualizza Preventivo')
+                            ->visible(fn($record) => filled($record->cod_alfa))
+                            ->openUrlInNewTab()
+                            ->extraAttributes(['target' => '_blank'])
+                            ->url(function ($record) {
+                                return route('preventivo.show', ['cod_alfa' => $record->cod_alfa]);
+                            }),
+
+                        /*  ViewAction::make()
+                             ->label('Scheda Preventivo')
+                             ->modalHeading(fn($record): string => 'Scheda Preventivo'), */
+                        EditAction::make()->visible(function ($record) {
+                            $user = auth()->user();
+
+                            // Admin e Superadmin possono modificare tutto
+                            if ($user->hasAnyRole(['admin', 'superadmin'])) {
+                                return true;
                             }
 
-                            // Altrimenti apri la pagina normale con il link
-                            return route('preventivi.pdf', $record);
-                        })
-                        ->openUrlInNewTab(), */
-                    ViewAction::make()
-                        ->icon('heroicon-o-globe-alt')
-                        ->disabled(false)
-                        ->label('Visualizza Preventivo')
-                        ->visible(fn($record) => filled($record->cod_alfa))
-                        ->openUrlInNewTab()
-                        ->extraAttributes(['target' => '_blank'])
-                        ->url(function ($record) {
-                                                       return route('preventivo.show', ['cod_alfa' => $record->cod_alfa]);
+                            // Gli agenti possono modificare solo le proprie richieste
+                            if ($user->hasRole('agente') && $record->created_by === $user->id) {
+                                return true;
+                            }
+
+                            // Tutti gli altri no
+                            return false;
                         }),
+                        DeleteAction::make()
+                            ->visible(
+                                fn($record) =>
+                                auth()->user()?->hasAnyRole(['admin', 'superadmin']) ||
+                                $record->created_by === auth()->id()
+                            )
+                            ->modalHeading(fn($record): string => 'Elimina Preventivo'),
+                    ]), // chiusura ActionGroup
+                ],
+                position: RecordActionsPosition::BeforeColumns
+            ) // azioni a sinistra
 
-                   /*  ViewAction::make()
-                        ->label('Scheda Preventivo')
-                        ->modalHeading(fn($record): string => 'Scheda Preventivo'), */
-                    EditAction::make()->visible(function ($record) {
-                        $user = auth()->user();
-
-                        // Admin e Superadmin possono modificare tutto
-                        if ($user->hasAnyRole(['admin', 'superadmin'])) {
-                            return true;
-                        }
-
-                        // Gli agenti possono modificare solo le proprie richieste
-                        if ($user->hasRole('agente') && $record->created_by === $user->id) {
-                            return true;
-                        }
-
-                        // Tutti gli altri no
-                        return false;
-                    }),
-                    DeleteAction::make()
-                        ->visible(
-                            fn($record) =>
-                            auth()->user()?->hasAnyRole(['admin', 'superadmin']) ||
-                            $record->created_by === auth()->id()
-                        )
-                        ->modalHeading(fn($record): string => 'Elimina Preventivo'),
-                ]), // chiusura ActionGroup
-            ],
-            position: RecordActionsPosition::BeforeColumns) // azioni a sinistra
-           
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

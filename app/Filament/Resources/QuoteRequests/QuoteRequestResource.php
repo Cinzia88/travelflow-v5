@@ -51,6 +51,12 @@ class QuoteRequestResource extends Resource
         ];
     }
 
+     public static function getBreadcrumb(): string
+    {
+        return 'Richieste Interne';
+    }
+
+
     public static function getPages(): array
     {
         return [

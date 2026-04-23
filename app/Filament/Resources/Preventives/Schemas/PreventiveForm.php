@@ -49,16 +49,11 @@ use App\Models\TransportCompany;
 
 class PreventiveForm
 {
+    
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->components([
-
-
-
-
-
-
 
                 TextEntry::make('avviso_bozza')
                     ->label('')
