@@ -23,10 +23,9 @@ class PreventiveResource extends Resource
 
     //protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Preventivi';
 
 
-    protected static ?string $navigationLabel = 'Lista Preventivi';
+    protected static ?string $navigationLabel = 'Preventivi';
 
     protected static ?int $navigationSort = 6;
 

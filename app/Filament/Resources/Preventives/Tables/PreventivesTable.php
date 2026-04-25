@@ -2,17 +2,20 @@
 
 namespace App\Filament\Resources\Preventives\Tables;
 
+use App\Exports\PreventiveExport;
 use App\Filament\Resources\Preventives\PreventiveResource;
 use App\Models\Preventive;
 use App\Models\User;
 use App\PreventiveStatus;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -22,6 +25,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Enums\RecordActionsPosition;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class PreventivesTable
@@ -32,7 +36,7 @@ Se provassi a scrivere questo nel tuo codice:
 
 PHP
 $array = [
-    PreventiveStatus::RIFIUTATO => 'Rifiutato', // SENZA ->value
+   PreventiveStatus::RIFIUTATO => 'Rifiutato', // SENZA ->value
 ];
 PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un array possono essere solo stringhe o numeri, non oggetti. */
         return [
@@ -195,10 +199,13 @@ PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un ar
                 SelectFilter::make('created_by')
                     ->label('Creato da')
                     ->options(function () {
-                        return User::get()
-                            ->pluck(function ($user) {
-                                return $user->nome . ' ' . $user->cognome;
-                            }, 'id')
+                        return User::query()
+                            ->select('id', 'nome', 'cognome')
+                            ->whereHas('preventives')
+                            ->get()
+                            ->mapWithKeys(fn($user) => [
+                                $user->id => "{$user->nome} {$user->cognome}",
+                            ])
                             ->toArray();
                     })
                     ->query(function (Builder $query, array $data) {
@@ -277,6 +284,35 @@ PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un ar
             ->recordActions(
                 [
                     ActionGroup::make([
+                        Action::make('export-single-excel')
+                            ->label('Esporta Excel')
+                            ->icon('heroicon-o-document-text')
+                            ->color('success')
+                            ->action(function ($record) {
+                                $columns = [
+                                    'id',
+                                    'numero',
+                                    'anno',
+                                    'titolo',
+                                    'created_by',
+                                    'customer_id',
+                                    'email_cliente',
+                                    'data_preventivo',
+                                    'meta_viaggio',
+                                    'nome_itinerario',
+                                    'data_inizio_viaggio',
+                                    'data_fine_viaggio',
+                                    'numero_persone',
+                                    'numero_gratuita',
+                                    'prezzo_per_persona',
+                                    'markup',
+                                    'totale_incasso',
+                                    'stato',
+                                ];
+                                $filename = 'preventivo_' . $record->id . '_' . now()->format('Ymd_His') . '.xlsx';
+                                return Excel::download(new PreventiveExport([$record->id], $columns), $filename);
+
+                            }),
                         Action::make('scaricaPdf')
                             ->label('Scarica PDF')
                             ->icon('heroicon-o-document-arrow-down')
@@ -369,6 +405,97 @@ PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un ar
 
             ->toolbarActions([
                 BulkActionGroup::make([
+                   
+                        BulkAction::make('export-excel')
+                            ->label('Esporta Excel')
+                            ->icon('heroicon-o-document-text')
+                            ->color('success')
+                            ->form([
+                                CheckboxList::make('columns')
+                                    ->label('Colonne da esportare')
+                                    ->options([
+                                        'id' => 'ID',
+                                        'numero' => 'Numero',
+                                        'anno' => 'Anno',
+                                        'titolo' => 'Titolo',
+                                        'created_by' => 'Creato da',
+                                        'customer_id' => 'Cliente',
+                                        'email_cliente' => 'Email Cliente',
+                                        'data_preventivo' => 'Data Preventivo',
+                                        'meta_viaggio' => 'Meta Viaggio',
+                                        'nome_itinerario' => 'Nome Itinerario',
+                                        'data_inizio_viaggio' => 'Data Inizio Viaggio',
+                                        'data_fine_viaggio' => 'Data Fine Viaggio',
+                                        'numero_persone' => 'Numero Persone',
+                                        'numero_gratuita' => 'Numero Gratuita',
+                                        'prezzo_per_persona' => 'Prezzo per Persona',
+                                        'markup' => 'Markup',
+                                        'totale_incasso' => 'Totale Incasso',
+                                        'stato' => 'Stato',
+                                    ])
+                                    ->default([
+                                        'id',
+                                        'numero',
+                                        'anno',
+                                        'titolo',
+                                        'created_by',
+                                        'customer_id',
+                                        'email_cliente',
+                                        'data_preventivo',
+                                        'meta_viaggio',
+                                        'nome_itinerario',
+                                        'data_inizio_viaggio',
+                                        'data_fine_viaggio',
+                                        'numero_persone',
+                                        'numero_gratuita',
+                                        'prezzo_per_persona',
+                                        'markup',
+                                        'totale_incasso',
+                                        'stato',
+                                    ])
+                                    ->columns(2)
+                                    ->required(),
+
+                                //  Aggiungiamo i campi del range di date
+                                DatePicker::make('from')
+                                    ->label('Da')
+                                    ->placeholder('Data inizio')
+                                    ->native(false), // opzionale, per UI più carina
+
+                                DatePicker::make('until')
+                                    ->label('A')
+                                    ->placeholder('Data fine')
+                                    ->native(false),
+                            ])
+                            ->action(function (array $data, $records) {
+                                $ids = $records->pluck('id')->toArray();
+                                $columns = $data['columns'] ?? [];
+                                $from = $data['from'] ?? null;
+                                $until = $data['until'] ?? null;
+
+                                // Applichiamo il filtro per date se specificato
+                                $query = Preventive::query()->whereIn('id', $ids);
+                                if ($from) {
+                                    $query->whereDate('data_preventivo', '>=', $from);
+                                }
+                                if ($until) {
+                                    $query->whereDate('data_preventivo', '<=', $until);
+                                }
+
+                                $filteredIds = $query->pluck('id')->toArray();
+
+                                if (empty($filteredIds)) {
+                                    Notification::make()
+                                        ->title('Nessun preventivo da esportare')
+                                        ->body('Non ci sono preventivi che corrispondono ai criteri selezionati.')
+                                        ->warning()
+                                        ->send();
+                                    return;
+                                }
+
+                                $filename = 'preventivi_' . now()->format('Ymd_His') . '.xlsx';
+                                return Excel::download(new PreventiveExport($filteredIds, $columns), $filename);
+                            }),
                     DeleteBulkAction::make(),
                 ]),
             ]);
