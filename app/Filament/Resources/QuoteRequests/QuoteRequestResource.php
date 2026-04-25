@@ -23,9 +23,8 @@ class QuoteRequestResource extends Resource
 
     //protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-     protected static string|UnitEnum|null $navigationGroup = 'Richieste';
 
-    protected static ?string $navigationLabel = 'Richieste Interne';
+    protected static ?string $navigationLabel = 'Richieste';
 
     protected static ?int $navigationSort = 3;
 

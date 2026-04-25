@@ -12,63 +12,42 @@
 
 
     <style>
+      
+
         @media print {
-            .page-break {
-                page-break-before: always;
-                break-before: page;
-            }
+    /* Resetta body e html per permettere lo scorrimento e le interruzioni di pagina */
+    body, html {
+        height: auto !important;
+        width: 100% !important;
+        overflow: visible !important;
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important; /* Rimuove il vincolo di Tailwind lg:max-w-6xl */
+    }
 
-            .avoid-break {
-                page-break-inside: avoid;
-                break-inside: avoid;
-            }
+    /* Permetti agli elementi di spezzarsi tra le pagine */
+    section, div {
+        break-inside: auto !important;
+    }
 
-            body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
+    /* Forza il colore di sfondo per le stampe */
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
 
-            @page {
-                size: A4;
+    @page {
+        size: A4;
+        margin: 10mm; /* Aggiungi un margine generale */
+    }
 
-                margin: 10mm 0mm 0mm 0mm;
-                /* margini in millimetri */
-            }
-
-            .pdf-header {
-                /*position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 30mm;
-                /* altezza effettiva del tuo header */
-
-            }
-
-            .pdf-content {
-                /*margin-top: 35mm;
-                /* leggermente > altezza header per non sovrapporre */
-            }
-
-
-            .page-break {
-                page-break-before: always;
-                break-before: page;
-
-            }
-
-
-            ul.list-disc ul {
-                list-style-type: disc !important;
-                margin-left: 1.5rem !important;
-                padding-left: 1.5rem !important;
-                display: block !important;
-            }
-
-            ul.list-disc li {
-                margin-bottom: 0.25rem;
-            }
-        }
+    /* Mantieni le tue classi esistenti */
+    .page-break {
+        page-break-before: always;
+        break-before: page;
+    }
+}
 
         @media screen {
             html {
@@ -130,6 +109,7 @@
 </head>
 
 <body class="font-sans text-gray-900  leading-relaxed  w-full lg:max-w-6xl">
+   
     <!-- HEADER -->
     <header class="flex justify-between items-center p-4 pdf-header">
 

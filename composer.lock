@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9cb97ec0b240f13e48d993d5a8dbdcea",
+    "content-hash": "55d1a15303ce391c29a286c90529c6a1",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -6445,6 +6445,74 @@
             "time": "2022-12-17T21:53:22+00:00"
         },
         {
+            "name": "spatie/browsershot",
+            "version": "5.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/browsershot.git",
+                "reference": "d2e4ac7c69162999940172a674bf83ddc5ac59ea"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/browsershot/zipball/d2e4ac7c69162999940172a674bf83ddc5ac59ea",
+                "reference": "d2e4ac7c69162999940172a674bf83ddc5ac59ea",
+                "shasum": ""
+            },
+            "require": {
+                "ext-fileinfo": "*",
+                "ext-json": "*",
+                "php": "^8.2",
+                "spatie/temporary-directory": "^2.0",
+                "symfony/process": "^6.0|^7.0|^8.0"
+            },
+            "require-dev": {
+                "pestphp/pest": "^3.0|^4.0",
+                "spatie/image": "^3.6",
+                "spatie/pdf-to-text": "^1.52",
+                "spatie/phpunit-snapshot-assertions": "^5.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Spatie\\Browsershot\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Freek Van der Herten",
+                    "email": "freek@spatie.be",
+                    "homepage": "https://github.com/freekmurze",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Convert a webpage to an image or pdf using headless Chrome",
+            "homepage": "https://github.com/spatie/browsershot",
+            "keywords": [
+                "chrome",
+                "convert",
+                "headless",
+                "image",
+                "pdf",
+                "puppeteer",
+                "screenshot",
+                "webpage"
+            ],
+            "support": {
+                "source": "https://github.com/spatie/browsershot/tree/5.2.3"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/spatie",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-02-18T16:10:58+00:00"
+        },
+        {
             "name": "spatie/invade",
             "version": "2.1.0",
             "source": {
@@ -6786,6 +6854,67 @@
                 }
             ],
             "time": "2026-02-01T09:30:04+00:00"
+        },
+        {
+            "name": "spatie/temporary-directory",
+            "version": "2.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/temporary-directory.git",
+                "reference": "662e481d6ec07ef29fd05010433428851a42cd07"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/temporary-directory/zipball/662e481d6ec07ef29fd05010433428851a42cd07",
+                "reference": "662e481d6ec07ef29fd05010433428851a42cd07",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Spatie\\TemporaryDirectory\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Alex Vanderbist",
+                    "email": "alex@spatie.be",
+                    "homepage": "https://spatie.be",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Easily create, use and destroy temporary directories",
+            "homepage": "https://github.com/spatie/temporary-directory",
+            "keywords": [
+                "php",
+                "spatie",
+                "temporary-directory"
+            ],
+            "support": {
+                "issues": "https://github.com/spatie/temporary-directory/issues",
+                "source": "https://github.com/spatie/temporary-directory/tree/2.3.1"
+            },
+            "funding": [
+                {
+                    "url": "https://spatie.be/open-source/support-us",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/spatie",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-01-12T07:42:22+00:00"
         },
         {
             "name": "symfony/clock",
@@ -9790,6 +9919,93 @@
     ],
     "packages-dev": [
         {
+            "name": "beyondcode/expose",
+            "version": "3.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/exposedev/expose.git",
+                "reference": "2b87e6685806bba53d7072aa1feffa0c3d901c26"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/exposedev/expose/zipball/2b87e6685806bba53d7072aa1feffa0c3d901c26",
+                "reference": "2b87e6685806bba53d7072aa1feffa0c3d901c26",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "laravel-zero/phar-updater": "^1.3",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "cboden/ratchet": "dev-master",
+                "chillerlan/php-qrcode": "^5.0",
+                "exposedev/common": "dev-main",
+                "fakerphp/faker": "^1.23",
+                "guzzlehttp/guzzle": "^7.5",
+                "guzzlehttp/psr7": "^1.7|^2.0",
+                "illuminate/database": "^11.5",
+                "illuminate/http": "^11.5",
+                "illuminate/log": "^11.5",
+                "illuminate/pipeline": "^11.5",
+                "illuminate/validation": "^11.5",
+                "illuminate/view": "^11.5",
+                "laminas/laminas-http": "^2.13",
+                "laravel-zero/framework": "^11.0",
+                "laravel/prompts": "^0.3.0@dev",
+                "mockery/mockery": "^1.4.2",
+                "nikic/php-parser": "^v4.10",
+                "nunomaduro/termwind": "^2.0",
+                "nyholm/psr7": "^1.3",
+                "octoper/cuzzle": "dev-master",
+                "phpunit/phpunit": "^10.5.1",
+                "ratchet/pawl": "dev-master",
+                "ratchet/rfc6455": "dev-master",
+                "react/async": "^4.3",
+                "react/child-process": "^0.6.6",
+                "react/dns": "1.x-dev",
+                "react/http": "dev-websocket-support",
+                "react/socket": "^1.6",
+                "react/stream": "^1.1.1",
+                "riverline/multipart-parser": "^2.0",
+                "symfony/expression-language": "^5.2",
+                "symfony/http-kernel": "^7.0",
+                "symfony/psr-http-message-bridge": "^7.0",
+                "symfony/yaml": "^7.0"
+            },
+            "bin": [
+                "builds/expose"
+            ],
+            "type": "project",
+            "autoload": {
+                "psr-4": {
+                    "Expose\\Client\\": "app/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marcel Pociot",
+                    "email": "marcel@beyondco.de"
+                }
+            ],
+            "description": "Create public URLs for local sites through any firewall and VPN.",
+            "homepage": "https://sharedwithexpose.com",
+            "keywords": [
+                "expose",
+                "ngrok",
+                "tunnel"
+            ],
+            "support": {
+                "issues": "https://github.com/exposedev/expose/issues",
+                "source": "https://github.com/exposedev/expose/tree/3.2.2"
+            },
+            "time": "2026-03-27T15:10:04+00:00"
+        },
+        {
             "name": "fakerphp/faker",
             "version": "v1.24.1",
             "source": {
@@ -9973,6 +10189,67 @@
                 "source": "https://github.com/hamcrest/hamcrest-php/tree/v2.1.1"
             },
             "time": "2025-04-30T06:54:44+00:00"
+        },
+        {
+            "name": "laravel-zero/phar-updater",
+            "version": "v1.4.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel-zero/phar-updater.git",
+                "reference": "131bc5e7477c9233fab8087f7d0bbb234616b417"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel-zero/phar-updater/zipball/131bc5e7477c9233fab8087f7d0bbb234616b417",
+                "reference": "131bc5e7477c9233fab8087f7d0bbb234616b417",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "conflict": {
+                "padraic/phar-updater": "*"
+            },
+            "require-dev": {
+                "ext-json": "*",
+                "laravel/pint": "^1.21",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^11.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Humbug\\SelfUpdate\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Padraic Brady",
+                    "email": "padraic.brady@gmail.com",
+                    "homepage": "http://blog.astrumfutura.com"
+                },
+                {
+                    "name": "Owen Voke",
+                    "email": "development@voke.dev",
+                    "homepage": "https://voke.dev"
+                }
+            ],
+            "description": "A thing to make PHAR self-updating easy and secure.",
+            "keywords": [
+                "humbug",
+                "phar",
+                "self-update",
+                "update"
+            ],
+            "support": {
+                "issues": "https://github.com/laravel-zero/phar-updater/issues",
+                "source": "https://github.com/laravel-zero/phar-updater/tree/v1.4.2"
+            },
+            "time": "2025-04-07T12:28:11+00:00"
         },
         {
             "name": "laravel/boost",
