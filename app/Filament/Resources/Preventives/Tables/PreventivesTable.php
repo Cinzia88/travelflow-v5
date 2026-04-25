@@ -469,12 +469,18 @@ PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un ar
                             ])
                             ->action(function (array $data, $records) {
                                 $ids = $records->pluck('id')->toArray();
+                                //Questa riga trasforma la tua collezione di modelli in un semplice elenco di numeri (gli ID).
                                 $columns = $data['columns'] ?? [];
                                 $from = $data['from'] ?? null;
                                 $until = $data['until'] ?? null;
 
                                 // Applichiamo il filtro per date se specificato
                                 $query = Preventive::query()->whereIn('id', $ids);
+                                /* whereIn: È l'addetto alla sicurezza che prende ogni persona (ogni record) e controlla: "Il tuo ID è presente nella mia lista degli invitati?".
+
+Se sì, ti fa passare (il record viene incluso nel risultato).
+
+Se no, ti lascia fuori (il record viene scartato). non si usa where perché whereIn è più efficiente per filtrare per una lista di ID., anche perché $ids non considera solo un ID, ma una lista di ID. */
                                 if ($from) {
                                     $query->whereDate('data_preventivo', '>=', $from);
                                 }
