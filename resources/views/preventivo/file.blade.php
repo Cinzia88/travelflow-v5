@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Preventivo La Bussola</title>
+    <title>Preventivo TravelFlow</title>
     <style>
         @page {
             margin: 0;

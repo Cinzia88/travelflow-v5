@@ -47,21 +47,28 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
     }
 }
 
-   protected function saveAsDraft()
+  protected function saveAsDraft()
 {
     $this->isDraft = true;
     $this->resetValidation();
-// Usiamo getRawState() perché è l'unico modo per vedere i dati 
-    // prima che la convalida di Filament lanci l'errore del RichEditor.
-    //dd($this->form->getRawState());
-    // 1. Prendi tutti i dati dal form
+
     $data = $this->form->getState();
 
+    // Verifichiamo il cliente
+    if (empty($data['customer_id'])) {
+        Notification::make()
+            ->title('Cliente mancante')
+            ->body('Seleziona un cliente prima di salvare il preventivo.')
+            ->danger()
+            ->send();
+        return;
+    }
+    $data = $this->processAllFiles($data);
 
-    DB::transaction(function () use ($data) {
+    // Eseguiamo la transazione e facciamo in modo che restituisca il preventivo salvato
+    $preventivo = DB::transaction(function () use ($data) {
         $preventivo = $this->record ?? new Preventive();
         
-        // 2. SEPARAZIONE: Estraiamo i dati dell'email per dopo
         $emailData = [
             'email_template_id' => $data['email_template_id'] ?? null,
             'email_cliente'     => $data['email_cliente'] ?? null,
@@ -70,8 +77,6 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
             'allegati'          => $data['allegati'] ?? [],
         ];
 
-        // 3. PULIZIA: Togliamo i campi dell'email dall'array $data
-        // così il preventivo non proverà a salvarli nel DB
         unset(
             $data['email_template_id'],
             $data['email_cliente'],
@@ -82,33 +87,79 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
 
         $data['stato'] = PreventiveStatus::BOZZA;
 
-        // 4. SALVATAGGIO PREVENTIVO (ora è pulito e non crasha)
         if ($this->record) {
             $this->record->update($data);
         } else {
             $this->record = Preventive::create($data);
         }
 
-        // 5. SALVATAGGIO RELAZIONI (Hotel, extra, ecc.)
+        // Salvataggio relazioni e email
         $this->form->model($this->record)->saveRelationships();
-        
-        // 6. SALVATAGGIO EMAIL (usiamo l'array filtrato al punto 2)
         $this->saveEmailDraft($this->record, $emailData);
+
+        // Restituiamo il record aggiornato o creato
+        return $this->record;
     });
+
+    // Assegniamo nuovamente il record per sicurezza (necessario su Filament)
+    $this->record = $preventivo;
 
     Notification::make()->title('Bozza salvata!')->success()->send();
 
     return redirect()->to(
-        \App\Filament\Resources\Preventives\PreventiveResource::getUrl('edit', ['record' => $this->record->id]) . '?draft=1'
+        PreventiveResource::getUrl('edit', ['record' => $this->record->id]) . '?draft=1'
     );
 }
     protected function processAllFiles(array $data): array
     {
+        $tipoVisualizzazione = $data['tipo_visualizzazione_foto'] ?? 'per_giorno';
+    // 1. SE LA MODALITÀ È "IN FONDO" -> Cancelliamo le immagini dai singoli giorni
+    if ($tipoVisualizzazione === 'in_fondo') {
+        if (!empty($data['itinerario'])) {
+            foreach ($data['itinerario'] as $index => $giorno) {
+                // Svuotiamo l'array delle immagini del singolo giorno
+                $data['itinerario'][$index]['immagini'] = [];
+            }
+        }
+
+        // Processiamo solo la galleria in fondo
+        if (!empty($data['immagini_itinerario'])) {
+            $data['immagini_itinerario'] = $this->processFiles($data['immagini_itinerario'], 'preventivi');
+        }
+    }
+
+    // 2. SE LA MODALITÀ È "PER GIORNO" -> Cancelliamo la galleria in fondo
+    if ($tipoVisualizzazione === 'per_giorno') {
+        // Svuotiamo la galleria globale
+        $data['immagini_itinerario'] = [];
+
+        // Processiamo solo le immagini delle singole giornate
+        if (!empty($data['itinerario'])) {
+            foreach ($data['itinerario'] as $index => $giorno) {
+                if (!empty($giorno['immagini'])) {
+                    $data['itinerario'][$index]['immagini'] = $this->processFiles($giorno['immagini'], 'preventivi');
+                }
+            }
+        }
+    }
         // File allegati email
         if (!empty($data['allegati'])) {
             $data['allegati'] = $this->processFiles($data['allegati'], 'email_allegati');
         }
+// 2. File della Galleria Itinerario (NUOVO CAMPO)
+        if (!empty($data['immagini_itinerario'])) {
+            $data['immagini_itinerario'] = $this->processFiles($data['immagini_itinerario'], 'preventivi');
+        }
 
+        // 3. File delle singole giornate dell'itinerario (se presenti dentro il repeater)
+        if (!empty($data['itinerario'])) {
+            foreach ($data['itinerario'] as $index => $giorno) {
+                if (!empty($giorno['immagini'])) {
+                    $data['itinerario'][$index]['immagini'] =
+                        $this->processFiles($giorno['immagini'], 'preventivi');
+                }
+            }
+        }
         // File hotel
         if (!empty($data['hotel_preventives'])) {
             foreach ($data['hotel_preventives'] as $index => $hotel) {

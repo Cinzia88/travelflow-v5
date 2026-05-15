@@ -10,7 +10,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 
 class ListQuoteRequests extends ListRecords
 {
-    protected static ?string $title = 'Richieste Interne';
+    protected static ?string $title = 'Lista Richieste';
     protected static string $resource = QuoteRequestResource::class;
 
     protected function getHeaderActions(): array

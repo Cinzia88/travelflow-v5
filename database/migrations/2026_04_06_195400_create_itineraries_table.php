@@ -13,7 +13,9 @@ return new class extends Migration {
         Schema::create('itineraries', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->nullable();
+            $table->string('tipo_visualizzazione_foto')->default('per_giorno');
             $table->json('itinerario')->nullable();
+            $table->json('immagini_itinerario')->nullable();
             $table->timestamps();
         });
     }

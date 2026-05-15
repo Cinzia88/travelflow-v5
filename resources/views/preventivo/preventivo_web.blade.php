@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Preventivo La Bussola</title>
+    <title>Preventivo TravelFlow</title>
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 

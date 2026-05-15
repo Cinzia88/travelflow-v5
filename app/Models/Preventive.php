@@ -21,6 +21,7 @@ class Preventive extends Model
         'itinerario' => 'array',
         'immagini' => 'array',
         'files_pratica_accettata' => 'array',
+        'immagini_itinerario' => 'array',
 
         // ENUM personalizzato
         'stato' => PreventiveStatus::class,
@@ -259,50 +260,62 @@ class Preventive extends Model
 
         // ---- ITINERARIO ----
         $rawItinerario = $this->itinerario ?? $this->itinerary->itinerario ?? [];
+        $tipoVisualizzazione = $this->tipo_visualizzazione_foto
+            ?? $this->itinerary->tipo_visualizzazione_foto
+            ?? 'per_giorno';
 
+        $galleriaFoto = $this->immagini_itinerario
+            ?? $this->itinerary->immagini_itinerario
+            ?? [];
 
-        // Se è una stringa JSON, decodificala
-        if (is_string($rawItinerario)) {
-            $decoded = json_decode($rawItinerario, true);
-            $rawItinerario = is_array($decoded) ? $decoded : [];
+        // Se la galleria foto è una stringa JSON, la decodifichiamo
+        if (is_string($galleriaFoto)) {
+            $decodedGalleria = json_decode($galleriaFoto, true);
+            $galleriaFoto = is_array($decodedGalleria) ? $decodedGalleria : [];
         }
+        // Funzione di supporto per convertire i percorsi immagine in Base64
+        $convertToBase64 = function ($img) {
+            $path = storage_path('app/public/' . ltrim($img, '/'));
+            if (!file_exists($path)) {
+                return null;
+            }
+            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $data = file_get_contents($path);
+            return 'data:image/' . $ext . ';base64,' . base64_encode($data);
+        };
 
-        // Se è un array associativo con chiavi UUID, prendi solo i valori
-        if (array_is_list($rawItinerario) === false) {
-            $rawItinerario = array_values($rawItinerario);
-        }
+        /*   // Se è un array associativo con chiavi UUID, prendi solo i valori
+          if (array_is_list($rawItinerario) === false) {
+              $rawItinerario = array_values($rawItinerario);
+          } */
 
-        // Se è un singolo oggetto (non array di oggetti), wrappalo
-        if (!isset($rawItinerario[0]) && !empty($rawItinerario)) {
-            $rawItinerario = [$rawItinerario];
-        }
-
+        /*   // Se è un singolo oggetto (non array di oggetti), wrappalo
+          if (!isset($rawItinerario[0]) && !empty($rawItinerario)) {
+              $rawItinerario = [$rawItinerario];
+          }
+   */
         $itinerarioData = collect($rawItinerario)
-            ->map(function ($step) {
-                $rawDescrizione = $step['descrizione'] ?? [];
+            ->map(function ($step) use ($tipoVisualizzazione, $galleriaFoto, $convertToBase64) {
+
+                $rawDescrizione = $step['descrizione'] ?? '';
                 $descrizione = is_array($rawDescrizione)
                     ? collect($rawDescrizione['content'] ?? [])->map(fn($item) => collect($item['content'] ?? [])->pluck('text')->implode(' '))->implode("\n")
                     : strip_tags((string) $rawDescrizione);
+
+                $immaginiStep = ($tipoVisualizzazione === 'per_giorno') ? ($step['immagini'] ?? []) : $galleriaFoto;
                 return [
                     'titolo' => $step['titolo'] ?? '',
                     'descrizione' => $descrizione,
-                    'immagini' => collect($step['immagini'] ?? [])
-                        ->map(function ($img) {
-                            $path = storage_path('app/public/' . ltrim($img, '/'));
-                            if (!file_exists($path)) {
-                                return null;
-                            }
-                            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-                            $data = file_get_contents($path);
-                            return 'data:image/' . $ext . ';base64,' . base64_encode($data);
-                        })
+                    'immagini' => collect($immaginiStep)
+                        ->map(fn($img) => $convertToBase64($img))
                         ->filter()
-                        ->values()
                         ->toArray(),
                 ];
             })
             ->values()
             ->toArray();
+
+
 
 
 
@@ -564,7 +577,7 @@ class Preventive extends Model
         }
 
         return [
-            'logo' => $this->imageToBase64(public_path('pdf_images/logo.png')),
+            'logo' => $this->imageToBase64(public_path('images/logo.png')),
             'sole' => $this->imageToBase64(public_path('pdf_images/sole.png')),
             'test' => $this->imageToBase64(public_path('pdf_images/attivita educazione ambientale_tem.png')),
             'luna' => $this->imageToBase64(public_path('pdf_images/luna.png')),

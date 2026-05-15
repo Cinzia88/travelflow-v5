@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -25,7 +24,14 @@ return new class extends Migration
             $table->string('meta_viaggio')->nullable();
             $table->string('nome_itinerario')->nullable();
             $table->boolean('gita_giornaliera')->nullable();
+            $table->string('tipo_visualizzazione_foto')->default('per_giorno');
             $table->json('itinerario')->nullable();
+            $table->json('immagini_itinerario')->nullable();
+            $table->string('titolo')->nullable();
+            $table->integer('numero')->nullable();
+            $table->integer('anno')->nullable();
+            $table->date('data_preventivo')->nullable();
+            $table->date('data_invio')->nullable();
             $table->string('email_cliente')->nullable();
             $table->integer('numero_persone')->nullable();
             $table->integer('prezzo_per_persona')->nullable();

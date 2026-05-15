@@ -60,23 +60,37 @@ Senza questa riga, la tua funzione hasErrors non saprebbe mai se un campo è vuo
         foreach ($fields as $field) {
             $value = $get($field);
 
-
+            $tipoVisualizzazione = $data['tipo_visualizzazione_foto'] ?? 'per_giorno';
 
 
             // --- 2. Logica Repeater / Array Complessi ---
             if (is_array($value)) {
+                if ($field === 'immagini_itinerario') {
+                     
+                    if ($tipoVisualizzazione === 'in_fondo') {
+                        if (!empty($value) || count($value) < 3) {
+                           
+                            return true;
+                        }// Se la modalità è "in fondo" e ci sono immagini, c'è un errore
+
+                    }
+                    continue; // Se la modalità è "in fondo" e non ci sono immagini, va bene, continua con il prossimo controllo
+                }
+
                 if ($field === 'itinerario') {
 
-                    if (empty($value))/* se è vuoto allora Tab rossa */
-                        return true;
+                    if (empty($value)) {
+                        return true; // Se non ci sono giorni -> Tab Rossa
+                    }
+                    if ($tipoVisualizzazione === 'per_giorno') {
+                        $valid = collect($value)->every(fn($i) => count($i['immagini'] ?? []) >= 3);
+                        /* nella collect controlla se se le immagini sono almeno 3 
+                        every controlla tutti gli elementi del Repeater.*/
 
-                    $valid = collect($value)->every(fn($i) => count($i['immagini'] ?? []) >= 3);
-                    /* nella collect controlla se se le immagini sono almeno 3 
-                    every controlla tutti gli elementi del Repeater.*/
-
-                    if (!$valid)
-                        return true;/* if (!$valid) return true;
+                        if (!$valid)
+                            return true;/* if (!$valid) return true;
 Se il controllo fallisce (es. mancano immagini), la funzione si interrompe immediatamente e restituisce true (Segnale: "C'è un errore! Tab Rossa"). */
+                    }
                     continue; /*  Se il controllo ha successo, continua con il prossimo step: quindi Tab verde */
                 }
 

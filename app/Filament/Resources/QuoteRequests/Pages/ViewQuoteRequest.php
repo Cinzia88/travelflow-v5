@@ -9,6 +9,8 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewQuoteRequest extends ViewRecord
 {
     protected static string $resource = QuoteRequestResource::class;
+    protected static ?string $title = 'Dettagli Richiesta';
+
 
     protected function getHeaderActions(): array
     {

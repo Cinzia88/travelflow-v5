@@ -5,8 +5,11 @@ namespace App\Filament\Resources\Itineraries\Schemas;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Get;
+
 
 class ItineraryForm
 {
@@ -17,8 +20,19 @@ class ItineraryForm
                 TextInput::make('nome')->label('Nome')
                     ->columnSpanFull()
                     ->required(),
+
+                Select::make('tipo_visualizzazione_foto') // Sistemato l'errore di battitura
+                    ->label('Tipo di Visualizzazione delle Foto')
+                    ->options([
+                        'per_giorno' => 'Foto specifiche per ogni giorno',
+                        'in_fondo' => 'Tutte le foto alla fine dell\'itinerario',
+                    ])
+                    ->default('per_giorno')
+                    ->live()
+                    ->columnSpanFull(),
+
                 Repeater::make('itinerario')
-                    ->label('')
+                    ->label('Programma Giornaliero')
                     ->schema([
                         TextInput::make('titolo')->label('Titolo')
                             ->columnSpanFull()
@@ -26,33 +40,44 @@ class ItineraryForm
                         RichEditor::make('descrizione')
                             ->json()
                             ->toolbarButtons([
-                                'bold',
-                                'bulletList',
-                                'italic',
-                                'orderedList',
-                                'redo',
-                                'underline',
-                                'undo',
+                                'bold', 'bulletList', 'italic', 'orderedList', 'redo', 'underline', 'undo',
                             ]),
+                            
                         FileUpload::make('immagini')
                             ->label('Immagini Itinerario')
                             ->image()
                             ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
-                            ->minSize(50)
-                            ->maxSize(1024)
+                            // Usa ../../ perché siamo dentro il repeater
+                            ->hidden(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'in_fondo')
+                            ->required(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'per_giorno')
                             ->multiple()
-                            ->required()
-                            ->minFiles(3)
+                            ->minFiles(0) // Messo a 0 per non bloccare se un giorno non ha foto
                             ->maxFiles(3)
                             ->preserveFilenames()
                             ->disk('public')
                             ->visibility('public')
                             ->directory('preventivi')
-                            ->dehydrated(true) //  fondamentale: invia i file anche se il repeater è annidato
-                            ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per l’itinerario. Minimo 50KB.')
+                            ->dehydrated(true)
                             ->columnSpanFull(),
                     ])
                     ->addActionLabel('Aggiungi itinerario')
+                    ->columnSpanFull(),
+
+                FileUpload::make('immagini_itinerario')
+                    ->label('Galleria Fotografica (In fondo)')
+                    ->image()
+                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
+                    ->multiple()
+                    ->hidden(fn(Get $get) => $get('tipo_visualizzazione_foto') === 'per_giorno')
+                    ->required(fn(Get $get) => $get('tipo_visualizzazione_foto') === 'in_fondo')
+                    ->minFiles(0)
+                    ->maxFiles(6)
+                    ->preserveFilenames()
+                    ->disk('public')
+                    ->visibility('public')
+                    ->directory('preventivi')
+                    ->dehydrated(true)
+                    ->helperText('Carica le immagini per la galleria finale dell\'itinerario.')
                     ->columnSpanFull(),
             ]);
     }

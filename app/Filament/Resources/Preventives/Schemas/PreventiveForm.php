@@ -21,6 +21,7 @@ use Filament\Schemas\Components\Actions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Group;
@@ -49,7 +50,7 @@ use App\Models\TransportCompany;
 
 class PreventiveForm
 {
-    
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -63,6 +64,7 @@ class PreventiveForm
                 Tabs::make('Creazione Preventivo')
                     ->tabs([
                         ValidatedTab::make('Dati Preventivo', [
+                            'tipo_preventivo',
                             'titolo',
                             'customer_id',
                             'meta_viaggio',
@@ -98,7 +100,6 @@ class PreventiveForm
 
                                         // 3. Data Preventivo (Sostituito a DatePicker se vuoi solo visualizzarlo)
                                         TextEntry::make('anno')
-
                                             ->visibleOn('edit'),
                                         TextEntry::make('data_preventivo')
                                             ->label('Data Preventivo')
@@ -208,14 +209,68 @@ class PreventiveForm
                                             ->displayFormat('d/m/Y')
                                             ->label('Data Validità Preventivo')
                                             ->required(fn($livewire) => !$livewire->isDraft),
-                                        TextInput::make('titolo')
-                                            ->label('Titolo')
-                                            ->live()
+                                        Select::make('tipo_preventivo')
+                                            ->label('Tipo Preventivo')
+                                            ->options([
+                                                'libero' => 'Libero',
+                                                'con_richiesta' => 'Collegato a Richiesta',
+                                            ])
+                                            ->default('libero')
                                             ->dehydrated(fn($state) => $state != null)
-                                            ->maxLength(255)
                                             ->required(fn($livewire) => !$livewire->isDraft),
                                     ])
                                     ->columns(2),
+                                Select::make('quote_request_id')
+                                    ->relationship('quote_request', 'oggetto', modifyQueryUsing: function ($query) {
+                                        return $query->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA);
+
+                                    })
+                                    ->preload()
+                                    ->hidden(fn(Get $get): bool => $get('tipo_preventivo') !== 'con_richiesta')
+                                    ->live(debounce: 500)
+                                    ->getSearchResultsUsing(function (string $search) {
+                                        return QuoteRequest::query()
+                                            ->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA)
+                                            ->where(function ($query) use ($search) {
+                                                $query->where('oggetto', 'like', "%{$search}%")
+                                                    ->orWhere('id', 'like', "%{$search}%");
+                                            })
+                                            ->limit(50)
+                                            ->get();
+
+                                    })
+                                    // quando cambia la richiesta, imposto il customer_id associato
+                                    ->afterStateUpdated(function ($state, Set $set) {
+                                        if ($state) {
+                                            $req = QuoteRequest::find($state);
+                                            if ($req) {
+                                                $set('customer_id', $req->customer_id);
+                                                $set('meta_viaggio', $req->meta_viaggio);
+                                                $set('titolo', 'Preventivo per richiesta: ' . $req->tipo_richiesta);
+                                            }
+                                            if ($req && $req->customer?->email) {
+                                                $set('email_cliente', $req->customer->email);
+                                            }
+                                        } else {
+                                            // Se viene deselezionata la richiesta, pulisco i campi collegati
+                                            $set('customer_id', null);
+                                            $set('meta_viaggio', null);
+                                            $set('email_cliente', null);
+                                            $set('titolo', null);
+                                        }
+                                    })
+                                    ->columnSpanfull()
+                                    ->label('Richiesta')
+                                    ->searchable()
+                                    ->getOptionLabelFromRecordUsing(fn(QuoteRequest $record) => "{$record->id} - {$record->oggetto}")
+                                    ->required(fn($livewire) => !$livewire->isDraft),
+
+                                TextInput::make('titolo')
+                                    ->label('Titolo')
+                                    ->dehydrated(fn($state) => $state != null)
+                                    ->maxLength(255)
+                                    ->required(fn($livewire) => !$livewire->isDraft)
+                                    ->columnSpanFull(),
                                 Group::make()
                                     ->schema([
 
@@ -331,64 +386,6 @@ class PreventiveForm
                                             ])
                                     ])
                                     ->columns(2),
-
-
-
-                                Select::make('quote_request_id')
-                                    ->relationship('quote_request', 'oggetto', modifyQueryUsing: function ($query) {
-                                        if (auth()->user()->hasAnyRole(['admin', 'superadmin'])) {
-                                            return $query->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA);
-                                        }
-                                        return $query->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA)
-                                            ->where(function ($q) {
-                                                $q->where('created_by', auth()->id())
-                                                    ->orWhereHas('agenti_gestori', function ($agentiQuery) {
-                                                        $agentiQuery->where('user_id', auth()->id());
-                                                    });
-                                            });
-                                    })
-                                    ->preload()
-                                    ->hidden(fn(Get $get): bool => $get('tipo_preventivo') !== 'con_richiesta')
-                                    ->live(debounce: 500)
-                                    ->getSearchResultsUsing(function (string $search) {
-                                        return QuoteRequest::query()
-                                            ->where('stato_richiesta', '!=', QuoteRequestStatus::EVASA)
-                                            ->where(function ($query) {
-                                                $query->where('created_by', auth()->id())
-                                                    ->orWhereHas('agenti_gestori', function ($agentiQuery) {
-                                                        $agentiQuery->where('user_id', auth()->id());
-                                                    });
-                                            })->where(function ($query) use ($search) {
-                                                $query->where('oggetto', 'like', "%{$search}%")
-                                                    ->orWhere('id', 'like', "%{$search}%");
-                                            })
-                                            ->limit(50)
-                                            ->get()
-                                            ->mapWithKeys(function ($supplier) {
-                                                return [
-                                                    $supplier->id => trim("{$supplier->nome} {$supplier->cognome}"),
-                                                ];
-                                            });
-                                    })
-                                    // quando cambia la richiesta, imposto il customer_id associato
-                                    ->afterStateUpdated(function ($state, Set $set) {
-                                        $req = QuoteRequest::find($state);
-                                        if ($req) {
-                                            $set('customer_id', $req->customer_id);
-                                            $set('meta_viaggio', $req->meta_viaggio);
-                                        }
-                                        if ($req && $req->customer?->email) {
-                                            $set('email_cliente', $req->customer->email);
-                                        }
-                                    })
-                                    ->columnSpanfull()
-                                    ->label('Richiesta')
-                                    ->searchable()
-                                    ->getOptionLabelFromRecordUsing(fn(QuoteRequest $record) => "{$record->id} - {$record->oggetto}")
-                                    ->required(fn($livewire) => !$livewire->isDraft),
-
-
-
                                 Group::make()
                                     ->schema([
                                         TextInput::make('numero_persone')
@@ -477,6 +474,8 @@ class PreventiveForm
                             'itinerary_id',
                             'nome_itinerario',
                             'itinerario',
+                            'tipo_visualizzazione_foto',
+                            'immagini_itinerario',
                         ])
 
                             ->schema([
@@ -489,32 +488,62 @@ class PreventiveForm
                                             ->preload()
                                             ->required(fn($livewire) => !$livewire->isDraft)->live(debounce: 500)
                                             ->afterStateUpdated(function ($state, Set $set) {
-                                                if (!$state)
+                                                if (!$state) {
+                                                    $set('nome_itinerario', null);
+                                                    $set('tipo_visualizzazione_foto', 'per_giorno');
+                                                    $set('itinerario', []);
+                                                    $set('immagini_itinerario', []);
                                                     return;
+                                                }
 
                                                 $it = Itinerary::find($state);
 
                                                 if ($it) {
-                                                    $set('nome_itinerario', $it->nome);
-                                                    $set('itinerario', $it->itinerario ?? []);
+                                                    // 1. Popoliamo il nome dell'itinerario a livello radice
+                                                    $it = Itinerary::find($state);
+
+                                                    if ($it) {
+                                                        $set('nome_itinerario', $it->nome);
+                                                        $set('tipo_visualizzazione_foto', $it->tipo_visualizzazione_foto ?? 'per_giorno');
+                                                        $set('itinerario', $it->itinerario ?? []);
+                                                        $set('immagini_itinerario', $it->immagini_itinerario ?? []);
+                                                    } else {
+                                                        $set('nome_itinerario', null);
+                                                        $set('nome', null);
+                                                        $set('tipo_visualizzazione_foto', 'per_giorno');
+                                                        $set('itinerario', []);
+                                                        $set('immagini_itinerario', []);
+                                                    }
+
                                                 } else {
                                                     $set('nome_itinerario', null);
+                                                    $set('nome', null);
+                                                    $set('tipo_visualizzazione_foto', 'per_giorno');
                                                     $set('itinerario', []);
+                                                    $set('immagini_itinerario', []);
                                                 }
-
                                             })
                                             ->createOptionForm([
+
                                                 TextInput::make('nome')->label('Nome')
                                                     ->columnSpanFull()
                                                     ->required(),
+                                                Select::make('tipo_visualizzazione_foto')
+                                                    ->label('Tipo di Visualizzazione delle Foto')
+                                                    ->options([
+                                                        'per_giorno' => 'Foto specifiche per ogni giorno',
+                                                        'in_fondo' => 'Tutte le foto alla fine dell\'itinerario',
+                                                    ])
+                                                    ->default('per_giorno')
+                                                    ->live(),
                                                 Repeater::make('itinerario')
-                                                    ->label('')
+                                                    ->label('Programma Giornaliero')
                                                     ->schema([
                                                         TextInput::make('titolo')->label('Titolo')
                                                             ->columnSpanFull()
-                                                            ->required(fn($livewire) => !$livewire->isDraft),
+                                                            ->required(),
                                                         RichEditor::make('descrizione')
-                                                            ->json() // Forza l'uso del formato strutturato TipTap
+                                                            ->json()
                                                             ->toolbarButtons([
                                                                 'bold',
                                                                 'bulletList',
@@ -528,30 +557,54 @@ class PreventiveForm
                                                             ->label('Immagini Itinerario')
                                                             ->image()
                                                             ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
-                                                            ->minSize(50)
-                                                            ->maxSize(1024)
+                                                            /* ->minSize(50)
+                                                            ->maxSize(1024) */
+                                                            ->visible(function (Get $get) {
+                                                                return $get('../../tipo_visualizzazione_foto') === 'per_giorno';
+                                                            })
+                                                            ->required(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'per_giorno')
                                                             ->multiple()
-                                                            ->required(fn($livewire) => !$livewire->isDraft)
-                                                            ->minFiles(fn($livewire) => $livewire->isDraft ? 0 : 1)->maxFiles(3)
+                                                            ->minFiles(3)
+                                                            ->maxFiles(3)
                                                             ->preserveFilenames()
                                                             ->disk('public')
                                                             ->visibility('public')
                                                             ->directory('preventivi')
-                                                            ->dehydrated(true) // fondamentale: invia i file anche se il repeater è annidato
-                                                            ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per l\'itinerario. Minimo 50KB.')
+                                                            ->dehydrated(true) //  fondamentale: invia i file anche se il repeater è annidato
+                                                            ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per l’itinerario. Minimo 50KB.')
                                                             ->columnSpanFull(),
                                                     ])
                                                     ->addActionLabel('Aggiungi itinerario')
+                                                    ->columnSpanFull(),
+                                                FileUpload::make('immagini_itinerario')
+                                                    ->label('Galleria Fotografica (In fondo)')
+                                                    ->image()
+                                                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
+                                                    /* ->minSize(50)
+                                                    ->maxSize(1024) */
+                                                    ->multiple()
+                                                    ->visible(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'in_fondo' || $get('tipo_visualizzazione_foto') === 'in_fondo')
+                                                    ->required(fn(Get $get) => $get('tipo_visualizzazione_foto') === 'in_fondo')
+                                                    ->minFiles(3)
+                                                    ->maxFiles(3)
+                                                    ->preserveFilenames()
+                                                    ->disk('public')
+                                                    ->visibility('public')
+                                                    ->directory('preventivi')
+                                                    ->dehydrated(true) //  fondamentale: invia i file anche se il repeater è annidato
+                                                    ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per l’itinerario. Minimo 50KB.')
                                                     ->columnSpanFull(),
                                             ])
                                             ->editOptionAction(
                                                 fn(Action $action) => $action->after(function (Set $set, Get $get) {
                                                     $itineraryId = $get('itinerary_id');
-
                                                     if ($itineraryId) {
                                                         $it = Itinerary::find($itineraryId);
                                                         $set('nome_itinerario', $it->nome);
+                                                        $set('nome', $it->nome);
+                                                        $set('tipo_visualizzazione_foto', $it->tipo_visualizzazione_foto ?? 'per_giorno');
                                                         $set('itinerario', $it->itinerario ?? []);
+                                                        $set('immagini_itinerario', $it->immagini_itinerario ?? []);
                                                     }
                                                 })
                                             )
@@ -559,15 +612,22 @@ class PreventiveForm
                                                 TextInput::make('nome')->label('Nome')
                                                     ->columnSpanFull()
                                                     ->required(),
+                                                Select::make('tipo_visualizzazione_foto')
+                                                    ->label('Tipo di Visualizzazione delle Foto')
+                                                    ->options([
+                                                        'per_giorno' => 'Foto specifiche per ogni giorno',
+                                                        'in_fondo' => 'Tutte le foto alla fine dell\'itinerario',
+                                                    ])
+                                                    ->default('per_giorno')
+                                                    ->live(),
                                                 Repeater::make('itinerario')
-                                                    ->label('')
+                                                    ->label('Programma Giornaliero')
                                                     ->schema([
                                                         TextInput::make('titolo')->label('Titolo')
                                                             ->columnSpanFull()
                                                             ->required(),
                                                         RichEditor::make('descrizione')
-                                                            ->json() // Forza l'uso del formato strutturato TipTap
-
+                                                            ->json()
                                                             ->toolbarButtons([
                                                                 'bold',
                                                                 'bulletList',
@@ -580,60 +640,118 @@ class PreventiveForm
                                                         FileUpload::make('immagini')
                                                             ->label('Immagini Itinerario')
                                                             ->image()
-                                                            ->minSize(50)
-                                                            ->maxSize(1024)
-                                                            ->multiple()
                                                             ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
-                                                            ->required(fn($livewire) => !$livewire->isDraft)
-                                                            ->minFiles(fn($livewire) => $livewire->isDraft ? 0 : 1)->maxFiles(3)
+                                                            /* ->minSize(50)
+                                                            ->maxSize(1024) */
+                                                            ->multiple()
+                                                            ->visible(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'per_giorno')
+                                                            ->required(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'per_giorno')
+                                                            ->minFiles(3)
+                                                            ->maxFiles(3)
                                                             ->preserveFilenames()
                                                             ->disk('public')
                                                             ->visibility('public')
                                                             ->directory('preventivi')
                                                             ->dehydrated(true) //  fondamentale: invia i file anche se il repeater è annidato
-                                                            ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per l\'itinerario. Minimo 50KB.')
+                                                            ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per l’itinerario. Minimo 50KB.')
                                                             ->columnSpanFull(),
                                                     ])
                                                     ->addActionLabel('Aggiungi itinerario')
                                                     ->columnSpanFull(),
+                                                FileUpload::make('immagini_itinerario')
+                                                    ->label('Galleria Fotografica (In fondo)')
+                                                    ->image()
+                                                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
+                                                    /* ->minSize(50)
+                                                    ->maxSize(1024) */
+                                                    ->multiple()
+                                                    ->visible(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'in_fondo' || $get('tipo_visualizzazione_foto') === 'in_fondo')
+                                                    ->required(fn(Get $get) => $get('tipo_visualizzazione_foto') === 'in_fondo')
+                                                    ->minFiles(3)
+                                                    ->maxFiles(3)
+                                                    ->preserveFilenames()
+                                                    ->disk('public')
+                                                    ->visibility('public')
+                                                    ->directory('preventivi')
+                                                    ->dehydrated(true) //  fondamentale: invia i file anche se il repeater è annidato
+                                                    ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per l’itinerario. Minimo 50KB.')
+                                                    ->columnSpanFull(),
                                             ]),
                                     ]),
 
-                                TextInput::make('nome_itinerario')
-                                    ->label('Nome'),
 
-                                Repeater::make('itinerario')
+
+                                Section::make('Dettagli Programma di Viaggio')
                                     ->label('Programma di Viaggio')
-                                    ->addActionLabel('Aggiungi itinerario')
                                     ->schema([
-                                        TextInput::make('titolo')
-                                            ->label('Titolo'),
-                                        RichEditor::make('descrizione')
-                                            ->json() // Forza l'uso del formato strutturato TipTap
-                                            ->toolbarButtons([
-                                                'bold',
-                                                'bulletList',
-                                                'italic',
-                                                'orderedList',
-                                                'redo',
-                                                'underline',
-                                                'undo',
-                                            ]),
-                                        FileUpload::make('immagini')
-                                            ->label('Immagini Itinerario')
+                                        TextInput::make('nome_itinerario')->label('Nome')
+                                            ->columnSpanFull()
+                                            ->required(),
+                                        Select::make('tipo_visualizzazione_foto')
+                                            ->label('Tipo di Visualizzazione delle Foto')
+                                            ->options([
+                                                'per_giorno' => 'Foto specifiche per ogni giorno',
+                                                'in_fondo' => 'Tutte le foto alla fine dell\'itinerario',
+                                            ])
+                                            ->default('per_giorno')
+                                            ->live(),
+                                        Repeater::make('itinerario')
+                                            ->label('Programma Giornaliero')
+                                            ->schema([
+                                                TextInput::make('titolo')->label('Titolo')
+                                                    ->columnSpanFull()
+                                                    ->required(),
+                                                RichEditor::make('descrizione')
+                                                    ->json()
+                                                    ->toolbarButtons([
+                                                        'bold',
+                                                        'bulletList',
+                                                        'italic',
+                                                        'orderedList',
+                                                        'redo',
+                                                        'underline',
+                                                        'undo',
+                                                    ]),
+                                                FileUpload::make('immagini')
+                                                    ->label('Immagini Itinerario')
+                                                    ->image()
+                                                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
+                                                    /* ->minSize(50)
+                                                    ->maxSize(1024) */
+                                                    ->visible(function(Get $get) {
+                                                       return $get('../../tipo_visualizzazione_foto') === 'per_giorno';
+                                                    })
+                                                    ->required(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'per_giorno')
+                                                    ->multiple()
+                                                    ->minFiles(3)
+                                                    ->maxFiles(3)
+                                                    ->preserveFilenames()
+                                                    ->disk('public')
+                                                    ->visibility('public')
+                                                    ->directory('preventivi')
+                                                    ->dehydrated(true) //  fondamentale: invia i file anche se il repeater è annidato
+                                                    ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per l’itinerario. Minimo 50KB.')
+                                                    ->columnSpanFull(),
+                                            ])
+                                            ->addActionLabel('Aggiungi itinerario')
+                                            ->columnSpanFull(),
+                                        FileUpload::make('immagini_itinerario')
+                                            ->label('Galleria Fotografica (In fondo)')
                                             ->image()
+                                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
+                                            /* ->minSize(50)
+                                            ->maxSize(1024) */
                                             ->multiple()
-                                            ->minSize(50)
-                                            ->maxSize(1024)
-                                            ->required(fn($livewire) => !$livewire->isDraft)->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
-                                            ->minFiles(fn($livewire) => $livewire->isDraft ? 0 : 3)
+                                            ->visible(fn(Get $get) => $get('tipo_visualizzazione_foto') === 'in_fondo')
+                                            ->required(fn(Get $get) => $get('tipo_visualizzazione_foto') === 'in_fondo')
+                                            ->minFiles(3)
                                             ->maxFiles(3)
                                             ->preserveFilenames()
                                             ->disk('public')
                                             ->visibility('public')
                                             ->directory('preventivi')
-                                            ->dehydrated(true) // fondamentale: invia i file anche se il repeater è annidato
-                                            ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per l\'itinerario. Minimo 50KB.')
+                                            ->dehydrated(true) //  fondamentale: invia i file anche se il repeater è annidato
+                                            ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per l’itinerario. Minimo 50KB.')
                                             ->columnSpanFull(),
                                     ])
                                     ->columnSpanFull(),
@@ -643,19 +761,19 @@ class PreventiveForm
                         ])
                             ->hidden(condition: fn(Get $get): bool => $get('gita_giornaliera') === true)
                             ->schema([
-                                TextEntry::make('info_persone_forzate')
-                                    ->state(function (Get $get) {
-                                        $persone = (int) $get('numero_persone');
-                                        $forzate = (int) $get('n_persone_forzato');
+                                /*  TextEntry::make('info_persone_forzate')
+                                     ->state(function (Get $get) {
+                                         $persone = (int) $get('numero_persone');
+                                         $forzate = (int) $get('n_persone_forzato');
 
-                                        if ($forzate > 0 && $forzate !== $persone) {
-                                            return "Calcolo basato su {$forzate} partecipanti (forzato, anziché {$persone} partecipanti)";
-                                        }
+                                         if ($forzate > 0 && $forzate !== $persone) {
+                                             return "Calcolo basato su {$forzate} partecipanti (forzato, anziché {$persone} partecipanti)";
+                                         }
 
-                                        return null; // Non mostra nulla se il campo non è impostato
-                                    })
-                                    ->columnSpanFull()
-                                    ->disableLabel(),
+                                         return null; // Non mostra nulla se il campo non è impostato
+                                     })
+                                     ->columnSpanFull()
+                                     ->disableLabel(), */
                                 Repeater::make('hotel_preventives')
                                     ->label('Hotel collegati al preventivo')
 
@@ -845,8 +963,8 @@ class PreventiveForm
                                                     ->preserveFilenames()
                                                     ->multiple()
                                                     ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
-                                                    ->minSize(50)
-                                                    ->maxSize(1024)
+                                                    /*  ->minSize(50)
+                                                     ->maxSize(1024) */
                                                     ->disk('public')
                                                     ->helperText('Carica esattamente 3 immagini (.png, .jpg o .jpeg) per hotel/alloggio. Minimo 50KB.')
                                                     ->minFiles(3)
@@ -1005,8 +1123,8 @@ class PreventiveForm
                                                     ]),
                                                 FileUpload::make('foto')
                                                     ->image()
-                                                    ->minSize(50)
-                                                    ->maxSize(1024)
+                                                    /* ->minSize(50)
+                                                    ->maxSize(1024) */
                                                     ->preserveFilenames()
                                                     ->multiple()
                                                     ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
@@ -1099,14 +1217,14 @@ class PreventiveForm
 
                                                                 // Prendo numero persone normale e forzato
                                                                 $numeroPersone = (int) ($get('../../../../numero_persone') ?? $record?->numero_persone ?? 0);
-                                                                $numeroForzate = (int) ($get('../../../../n_persone_forzato') ?? $record?->n_persone_forzato ?? 0);
-
+                                                                //$numeroForzate = (int) ($get('../../../../n_persone_forzato') ?? $record?->n_persone_forzato ?? 0);
+                                                    
                                                                 // Se esiste numero persone forzato > 0, lo uso
-                                                                $personeEffettive = $numeroForzate > 0 ? $numeroForzate : $numeroPersone;
-
+                                                                //$personeEffettive = $numeroForzate > 0 ? $numeroForzate : $numeroPersone;
+                                                    
                                                                 // Tolgo le gratuità
                                                                 $numeroGratuitaT = (int) ($get('../../../../numero_gratuita') ?? $record?->numero_gratuita ?? 0);
-                                                                $totPaganti = max($personeEffettive - $numeroGratuitaT, 0);
+                                                                $totPaganti = max($numeroPersone - $numeroGratuitaT, 0);
 
 
                                                                 // Stanze paganti già presenti nel repeater
@@ -1838,13 +1956,16 @@ class PreventiveForm
                         ValidatedTab::make('Servizi Extra', [
                             'extra_services',
                         ])
-                          
+
                             ->schema([
                                 Repeater::make('extra_services')
                                     ->relationship('extra_services')
                                     ->columns(3) // Layout più compatto
                                     ->collapsible()
                                     ->collapsed()
+                                    ->collapsed()
+                                    ->default([]) // <--- Forza il repeater a partire completamente vuoto su un nuovo record
+                                    ->minItems(0) // <--- Permette di avere zero elementi (utile per le bozze)
                                     ->itemLabel(function (array $state): ?string {
                                         if (!empty($state['extra_service_id'])) {
                                             $service = ExtraService::find($state['extra_service_id']);
@@ -2021,7 +2142,7 @@ class PreventiveForm
                         ])
                             ->hidden(
                                 fn(Get $get, string $operation): bool =>
-                               
+
                                 $operation === 'create'
                             )
                             ->schema([
@@ -2070,22 +2191,22 @@ class PreventiveForm
                                                     ->numeric()
                                                     ->required(fn($livewire) => !$livewire->isDraft),
 
-                                                TextInput::make('n_persone_forzato')
-                                                    ->label('N° Persone Forzato')
-                                                    ->numeric()
-                                                    ->nullable()
-                                                    ->default(null)
-                                                    ->helperText('Dato ad uso interno. Quota individuale calcolata sulla base del numero inserito.')
-                                                    ->debounce(500)
-                                                    ->live()
-                                                    ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                                                        $data = $get();
-                                                        $data['n_persone_forzato'] = $state;
-                                                        [$quota, $tot] = self::calcolaCostoPerPersona($data);
-                                                        $set('prezzo_per_persona', $quota);
-                                                        $set('totale_incasso', $tot);
-                                                    }),
-                                            ])->columns(4),
+                                                /*  TextInput::make('n_persone_forzato')
+                                                     ->label('N° Persone Forzato')
+                                                     ->numeric()
+                                                     ->nullable()
+                                                     ->default(null)
+                                                     ->helperText('Dato ad uso interno. Quota individuale calcolata sulla base del numero inserito.')
+                                                     ->debounce(500)
+                                                     ->live()
+                                                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                                                         $data = $get();
+                                                         $data['n_persone_forzato'] = $state;
+                                                         [$quota, $tot] = self::calcolaCostoPerPersona($data);
+                                                         $set('prezzo_per_persona', $quota);
+                                                         $set('totale_incasso', $tot);
+                                                     }), */
+                                            ])->columns(3),
                                     ])->columnSpanFull(),
 
                                 Select::make('stato')
@@ -2125,10 +2246,11 @@ class PreventiveForm
                                         $traspIntermedi = $pick('trasporto_intermedio', []);
                                         $extraServices = $pick('extra_services', []);
 
-                                        $forzate = (int) $pick('n_persone_forzato', 0);
-                                        $persone = $forzate > 0
-                                            ? $forzate
-                                            : max((int) $pick('numero_persone', 0), 0);
+                                        $persone = max((int) $pick('numero_persone', 0), 0);
+                                        //$forzate = (int) $pick('n_persone_forzato', 0);
+                                        /*  $persone = $forzate > 0
+                                             ? $forzate
+                                             : max((int) $pick('numero_persone', 0), 0); */
                                         $markup = (int) $pick('markup', 0);
                                         $gratuite = max((int) $pick('numero_gratuita', 0), 0);
                                         $pagantiBase = max($persone - $gratuite, 1);
@@ -3044,13 +3166,14 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
 
         $personeTot = 0;
         $partecipanti = (int) ($test['numero_persone'] ?? 0);
-        $persone_forzate = (int) ($test['n_persone_forzato'] ?? 0);
+        //$persone_forzate = (int) ($test['n_persone_forzato'] ?? 0);
 
-        if (!empty($persone_forzate) && $persone_forzate > 0) {
+        /* if (!empty($persone_forzate) && $persone_forzate > 0) {
             $personeTot = (int) $persone_forzate;
         } else {
             $personeTot = $partecipanti;
-        }
+        } */
+        $personeTot = $partecipanti;
 
         $gratuite = (int) ($test['numero_gratuita'] ?? 0);
         $paganti = max(1, $personeTot - $gratuite);

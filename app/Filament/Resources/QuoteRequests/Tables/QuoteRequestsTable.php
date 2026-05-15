@@ -5,6 +5,7 @@ namespace App\Filament\Resources\QuoteRequests\Tables;
 use App\Filament\Resources\QuoteRequests\Schemas\QuoteRequestForm;
 use App\PreventiveStatus;
 use App\QuoteRequestStatus;
+use App\Services\OptionsTravel;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -68,7 +69,7 @@ Il risultato finale di queste tre operazioni è questo:[
                 TextColumn::make('tipo_richiesta')
                     ->label('Tipo di Richiesta')
                     ->formatStateUsing(function ($state) {
-                        $options = array_merge(...array_values(QuoteRequestForm::getOpzioniRichiesta()));
+                        $options = array_merge(...array_values(OptionsTravel::getOptionsTravel()));
                         return $options[$state] ?? $state;
                     }),
                 TextColumn::make('meta_viaggio')

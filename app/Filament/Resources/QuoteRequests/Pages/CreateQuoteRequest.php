@@ -8,4 +8,6 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateQuoteRequest extends CreateRecord
 {
     protected static string $resource = QuoteRequestResource::class;
+    protected static ?string $title = 'Crea Richiesta';
+
 }
