@@ -40,6 +40,10 @@ class ItineraryResource extends Resource
         return ItinerariesTable::configure($table);
     }
 
+    public static function getBreadcrumb(): string
+    {
+        return 'Itinerari';
+    }
     public static function getRelations(): array
     {
         return [

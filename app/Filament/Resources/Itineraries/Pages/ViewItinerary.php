@@ -10,6 +10,8 @@ class ViewItinerary extends ViewRecord
 {
     protected static string $resource = ItineraryResource::class;
 
+    protected static ?string $title = 'Dettagli Itinerario';
+
     protected function getHeaderActions(): array
     {
         return [

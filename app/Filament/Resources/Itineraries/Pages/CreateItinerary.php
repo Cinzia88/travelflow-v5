@@ -8,4 +8,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateItinerary extends CreateRecord
 {
     protected static string $resource = ItineraryResource::class;
+
+    protected static ?string $title = 'Nuovo Itinerario';
+
 }

@@ -486,7 +486,8 @@ class PreventiveForm
                                             ->relationship('itinerary', 'nome')
                                             ->searchable()
                                             ->preload()
-                                            ->required(fn($livewire) => !$livewire->isDraft)->live(debounce: 500)
+                                            ->required(fn($livewire) => !$livewire->isDraft)
+                                            ->live(debounce: 500)
                                             ->afterStateUpdated(function ($state, Set $set) {
                                                 if (!$state) {
                                                     $set('nome_itinerario', null);
@@ -564,7 +565,6 @@ class PreventiveForm
                                                             })
                                                             ->required(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'per_giorno')
                                                             ->multiple()
-                                                            ->minFiles(3)
                                                             ->maxFiles(3)
                                                             ->preserveFilenames()
                                                             ->disk('public')
@@ -585,7 +585,6 @@ class PreventiveForm
                                                     ->multiple()
                                                     ->visible(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'in_fondo' || $get('tipo_visualizzazione_foto') === 'in_fondo')
                                                     ->required(fn(Get $get) => $get('tipo_visualizzazione_foto') === 'in_fondo')
-                                                    ->minFiles(3)
                                                     ->maxFiles(3)
                                                     ->preserveFilenames()
                                                     ->disk('public')
@@ -646,7 +645,6 @@ class PreventiveForm
                                                             ->multiple()
                                                             ->visible(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'per_giorno')
                                                             ->required(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'per_giorno')
-                                                            ->minFiles(3)
                                                             ->maxFiles(3)
                                                             ->preserveFilenames()
                                                             ->disk('public')
@@ -667,7 +665,6 @@ class PreventiveForm
                                                     ->multiple()
                                                     ->visible(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'in_fondo' || $get('tipo_visualizzazione_foto') === 'in_fondo')
                                                     ->required(fn(Get $get) => $get('tipo_visualizzazione_foto') === 'in_fondo')
-                                                    ->minFiles(3)
                                                     ->maxFiles(3)
                                                     ->preserveFilenames()
                                                     ->disk('public')
@@ -686,7 +683,7 @@ class PreventiveForm
                                     ->schema([
                                         TextInput::make('nome_itinerario')->label('Nome')
                                             ->columnSpanFull()
-                                            ->required(),
+                                            ->required(fn($livewire) => !$livewire->isDraft),
                                         Select::make('tipo_visualizzazione_foto')
                                             ->label('Tipo di Visualizzazione delle Foto')
                                             ->options([
@@ -700,7 +697,7 @@ class PreventiveForm
                                             ->schema([
                                                 TextInput::make('titolo')->label('Titolo')
                                                     ->columnSpanFull()
-                                                    ->required(),
+                                                    ->required(fn($livewire) => !$livewire->isDraft),
                                                 RichEditor::make('descrizione')
                                                     ->json()
                                                     ->toolbarButtons([
@@ -721,9 +718,8 @@ class PreventiveForm
                                                     ->visible(function(Get $get) {
                                                        return $get('../../tipo_visualizzazione_foto') === 'per_giorno';
                                                     })
-                                                    ->required(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'per_giorno')
+                                                    ->required(fn(Get $get, $livewire) => $get('../../tipo_visualizzazione_foto') === 'per_giorno' && !$livewire->isDraft)
                                                     ->multiple()
-                                                    ->minFiles(3)
                                                     ->maxFiles(3)
                                                     ->preserveFilenames()
                                                     ->disk('public')
@@ -743,8 +739,7 @@ class PreventiveForm
                                             ->maxSize(1024) */
                                             ->multiple()
                                             ->visible(fn(Get $get) => $get('tipo_visualizzazione_foto') === 'in_fondo')
-                                            ->required(fn(Get $get) => $get('tipo_visualizzazione_foto') === 'in_fondo')
-                                            ->minFiles(3)
+                                            ->required(fn(Get $get, $livewire) => $get('tipo_visualizzazione_foto') === 'in_fondo' && !$livewire->isDraft)
                                             ->maxFiles(3)
                                             ->preserveFilenames()
                                             ->disk('public')

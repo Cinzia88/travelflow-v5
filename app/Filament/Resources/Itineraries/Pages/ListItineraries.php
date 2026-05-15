@@ -10,6 +10,8 @@ class ListItineraries extends ListRecords
 {
     protected static string $resource = ItineraryResource::class;
 
+    protected static ?string $title = 'Lista Itinerari';
+
     protected function getHeaderActions(): array
     {
         return [
