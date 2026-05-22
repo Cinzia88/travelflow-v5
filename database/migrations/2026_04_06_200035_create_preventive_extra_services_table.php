@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('preventive_extra_services', function (Blueprint $table) {
             $table->id();
             $table->foreignId('preventive_id')->constrained('preventives')->cascadeOnDelete();
-            $table->foreignId('extra_service_id')->constrained('extra_services')->cascadeOnDelete();
+            $table->foreignId('extra_service_id')->nullable()->constrained('extra_services')->nullOnDelete();
             $table->string('tipo')->nullable();
             $table->enum('tipo_costo', ['a_persona', 'una_tantum'])->default('a_persona');
             $table->integer('prezzo')->nullable();

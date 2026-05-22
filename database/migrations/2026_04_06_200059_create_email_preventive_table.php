@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('email_preventive', function (Blueprint $table) {
             $table->id();
             $table->foreignId('preventive_id')->constrained('preventives')->cascadeOnDelete();
-            $table->foreignId('email_id')->constrained('emails')->cascadeOnDelete();
+            $table->foreignId('email_id')->constrained('emails')->nullOnDelete();
             $table->timestamps();
         });
     }

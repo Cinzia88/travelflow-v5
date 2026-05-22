@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('hotel_preventives', function (Blueprint $table) {
             $table->id();
             $table->foreignId('preventive_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('hotel_id')->constrained(); // Punta all'anagrafica hotel
+            $table->foreignId('hotel_id')->nullable()->constrained()->nullOnDelete(); // Punta all'anagrafica hotel
             // Campi personalizzati per QUESTO preventivo
             $table->text('quota_comprende_hotel')->nullable();
             $table->text('quota_non_comprende_hotel')->nullable();

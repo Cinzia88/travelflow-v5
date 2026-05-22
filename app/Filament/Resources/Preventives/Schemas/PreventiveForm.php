@@ -715,8 +715,8 @@ class PreventiveForm
                                                     ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
                                                     /* ->minSize(50)
                                                     ->maxSize(1024) */
-                                                    ->visible(function(Get $get) {
-                                                       return $get('../../tipo_visualizzazione_foto') === 'per_giorno';
+                                                    ->visible(function (Get $get) {
+                                                        return $get('../../tipo_visualizzazione_foto') === 'per_giorno';
                                                     })
                                                     ->required(fn(Get $get, $livewire) => $get('../../tipo_visualizzazione_foto') === 'per_giorno' && !$livewire->isDraft)
                                                     ->multiple()
@@ -755,6 +755,7 @@ class PreventiveForm
                             'hotel_preventives',
                         ])
                             ->hidden(condition: fn(Get $get): bool => $get('gita_giornaliera') === true)
+                          
                             ->schema([
                                 /*  TextEntry::make('info_persone_forzate')
                                      ->state(function (Get $get) {
@@ -771,8 +772,7 @@ class PreventiveForm
                                      ->disableLabel(), */
                                 Repeater::make('hotel_preventives')
                                     ->label('Hotel collegati al preventivo')
-
-
+                                    ->required(fn($livewire) => !$livewire->isDraft)
                                     ->relationship('hotel_preventives')
                                     ->collapsible()
                                     ->defaultItems(0)
@@ -1957,7 +1957,7 @@ class PreventiveForm
                                     ->relationship('extra_services')
                                     ->columns(3) // Layout più compatto
                                     ->collapsible()
-                                    ->collapsed()
+                                    ->required(fn($livewire) => !$livewire->isDraft)
                                     ->collapsed()
                                     ->default([]) // <--- Forza il repeater a partire completamente vuoto su un nuovo record
                                     ->minItems(0) // <--- Permette di avere zero elementi (utile per le bozze)

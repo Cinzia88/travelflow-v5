@@ -18,7 +18,7 @@ return new class extends Migration {
             ])->default('libero');
             $table->foreignId('quote_request_id')->nullable()->constrained('quote_requests')->cascadeOnDelete();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->cascadeOnDelete();
             $table->foreignId('itinerary_id')->nullable()->constrained('itineraries')->nullOnDelete();
             $table->string('cod_alfa')->nullable();
             $table->string('meta_viaggio')->nullable();

@@ -63,12 +63,14 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
             ->send();
         return;
     }
+
     $data = $this->processAllFiles($data);
 
     // Eseguiamo la transazione e facciamo in modo che restituisca il preventivo salvato
     $preventivo = DB::transaction(function () use ($data) {
         $preventivo = $this->record ?? new Preventive();
-        
+
+        dd($preventivo->extra_services());
         $emailData = [
             'email_template_id' => $data['email_template_id'] ?? null,
             'email_cliente'     => $data['email_cliente'] ?? null,
@@ -84,6 +86,7 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
             $data['corpo_email'],
             $data['allegati']
         );
+
 
         $data['stato'] = PreventiveStatus::BOZZA;
 

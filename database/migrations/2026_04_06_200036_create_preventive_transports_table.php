@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('preventive_id')->nullable()->constrained('preventives')->cascadeOnDelete();
             $table->foreignId('transport_id')->nullable()->constrained('transports')->nullOnDelete();
-            $table->foreignId('transport_company_id')->nullable()->constrained('transport_companies')->cascadeOnDelete()->nullOnDelete();
+            $table->foreignId('transport_company_id')->nullable()->constrained('transport_companies')->nullOnDelete();
             $table->enum('direzione_trasporto', [
                 'andata',
                 'rientro',
