@@ -53,7 +53,7 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
     $this->resetValidation();
 
     $data = $this->form->getState();
-
+/* 
     // Verifichiamo il cliente
     if (empty($data['customer_id'])) {
         Notification::make()
@@ -62,7 +62,7 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
             ->danger()
             ->send();
         return;
-    }
+    } */
 
     $data = $this->processAllFiles($data);
 
@@ -70,7 +70,6 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
     $preventivo = DB::transaction(function () use ($data) {
         $preventivo = $this->record ?? new Preventive();
 
-        dd($preventivo->extra_services());
         $emailData = [
             'email_template_id' => $data['email_template_id'] ?? null,
             'email_cliente'     => $data['email_cliente'] ?? null,
