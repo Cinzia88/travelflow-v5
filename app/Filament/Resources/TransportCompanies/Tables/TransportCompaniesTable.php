@@ -15,13 +15,18 @@ class TransportCompaniesTable
     {
         return $table
             ->columns([
-                TextColumn::make('nome')->searchable()->label('Nome'),
+                TextColumn::make('nome')
+                ->searchable()
+                ->placeholder('-')
+                ->label('Nome'),
                 TextColumn::make('created_at')
                     ->dateTime()
+                    ->placeholder('-')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->dateTime()
+                    ->placeholder('-')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

@@ -272,7 +272,7 @@ class QuoteRequestForm
                 Select::make('stato_richiesta')
                     ->label('Stato')
                     ->options(QuoteRequestStatus::class)
-                    ->default(QuoteRequestStatus::INVIATA->value)
+                    ->default(QuoteRequestStatus::CREATA->value)
                     ->live()
                     ->required(),
 

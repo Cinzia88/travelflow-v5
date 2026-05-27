@@ -244,15 +244,19 @@ class Preventive extends Model
 
         $customer = $this->customer;
 
-        if ($customer->tipo_cliente === 'privato') {
-            $cliente = trim($customer->nome . ' ' . $customer->cognome);
-            $tipo_cliente = $customer->tipo_cliente;
-            $genere_cliente = $customer->genere;
+        if ($customer) {
+            if ($customer->tipo_cliente === 'privato') {
+                $cliente = trim($customer->nome . ' ' . $customer->cognome);
+                $tipo_cliente = $customer->tipo_cliente;
+                $genere_cliente = $customer->genere;
+            } else {
+                $cliente = $customer->nome;
+                $tipo_cliente = $customer->tipo_cliente;
+            }
         } else {
-            $cliente = $customer->nome;
-            $tipo_cliente = $customer->tipo_cliente;
+            $cliente = 'Cliente non specificato';
+            $tipo_cliente = 'N/A';
         }
-
 
 
 
@@ -296,13 +300,14 @@ class Preventive extends Model
    */
         $itinerarioData = collect($rawItinerario)
             ->map(function ($step) use ($tipoVisualizzazione, $galleriaFoto, $convertToBase64) {
-
                 $rawDescrizione = $step['descrizione'] ?? '';
                 $descrizione = is_array($rawDescrizione)
                     ? collect($rawDescrizione['content'] ?? [])->map(fn($item) => collect($item['content'] ?? [])->pluck('text')->implode(' '))->implode("\n")
                     : strip_tags((string) $rawDescrizione);
 
-                $immaginiStep = ($tipoVisualizzazione === 'per_giorno') ? ($step['immagini'] ?? []) : $galleriaFoto;
+                $immaginiStep = $step['immagini'] ?? [];
+
+                // $immaginiStep = ($tipoVisualizzazione === 'per_giorno') ? ($step['immagini'] ?? []) : $galleriaFoto;
                 return [
                     'titolo' => $step['titolo'] ?? '',
                     'descrizione' => $descrizione,
@@ -313,6 +318,11 @@ class Preventive extends Model
                 ];
             })
             ->values()
+            ->toArray();
+
+        $galleriaFotoPreventivo = collect($galleriaFoto)
+            ->map(fn($img) => $convertToBase64($img))
+            ->filter()
             ->toArray();
 
 
@@ -655,8 +665,10 @@ class Preventive extends Model
 
             'trasporti_intermedi' => $trasportiIntermedi,
 
-
+            'tipo_visualizzazione_foto' => $tipoVisualizzazione,
+            'galleria_foto_itinerario' => $galleriaFotoPreventivo,
             'itinerario' => $itinerarioData,
+
 
 
 

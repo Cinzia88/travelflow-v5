@@ -17,6 +17,7 @@ class ExtraServicesTable
             ->columns([
                 TextColumn::make('nome')
                     ->label('Nome')
+                    ->placeholder('-')
                     ->getStateUsing(fn($record) => $record->nome ?? '-'),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -31,7 +32,6 @@ class ExtraServicesTable
                 //
             ])
             ->recordActions([
-                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

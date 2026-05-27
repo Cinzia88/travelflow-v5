@@ -7,7 +7,7 @@ use Filament\Support\Contracts\HasLabel;
 
 enum QuoteRequestStatus: string implements HasLabel, HasColor
 {
-    case INVIATA = 'inviata';
+    case CREATA = 'creata';
     case RISPOSTA = 'risposta pervenuta';
 
     case IN_LAVORAZIONE = 'in lavorazione';
@@ -20,7 +20,7 @@ enum QuoteRequestStatus: string implements HasLabel, HasColor
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::INVIATA => 'inviata',
+            self::CREATA => 'creata',
             self::RISPOSTA => 'risposta pervenuta',
             self::IN_LAVORAZIONE => 'in lavorazione',
             self::EVASA => 'evasa',
@@ -33,7 +33,7 @@ enum QuoteRequestStatus: string implements HasLabel, HasColor
     public function getColor(): ?string
     {
         return match ($this) {
-            self::INVIATA => 'primary',
+            self::CREATA => 'primary',
             self::RISPOSTA => 'info',
             self::IN_LAVORAZIONE => 'warning',
             self::EVASA => 'success',

@@ -16,7 +16,6 @@ return new class extends Migration {
             $table->string('tipo')->nullable();
             $table->string('nome')->nullable();
             $table->longText('descrizione_servizio')->nullable();
-            $table->string('icon')->nullable();
             $table->json('allegati')->nullable();
             $table->timestamps();
         });

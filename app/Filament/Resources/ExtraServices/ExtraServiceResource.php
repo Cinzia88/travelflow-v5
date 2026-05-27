@@ -55,7 +55,6 @@ class ExtraServiceResource extends Resource
         return [
             'index' => ListExtraServices::route('/'),
             'create' => CreateExtraService::route('/create'),
-            'view' => ViewExtraService::route('/{record}'),
             'edit' => EditExtraService::route('/{record}/edit'),
         ];
     }

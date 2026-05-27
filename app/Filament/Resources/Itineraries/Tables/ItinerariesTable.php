@@ -16,6 +16,8 @@ class ItinerariesTable
         return $table
             ->columns([
                 TextColumn::make('nome')
+                    ->label('Itinerario')
+                    ->placeholder('-')
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()

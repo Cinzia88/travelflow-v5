@@ -17,6 +17,7 @@ class EmailTemplateForm
                     ->columnSpanFull()
                     ->maxLength(255),
                 RichEditor::make('corpo_email')
+                    ->extraInputAttributes(['style' => 'min-height: 300px;'])
                     ->toolbarButtons([
                         'bold',
                         'bulletList',

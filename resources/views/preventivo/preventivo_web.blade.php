@@ -517,9 +517,13 @@
                 <h2 class="text-xl">Programma di viaggio</h2>
             </div>
         </section>
-        
+            
         @if (!empty($preventivo['itinerario']))
+                @if ($preventivo['tipo_visualizzazione_foto'] === 'per_giorno')
+
             @foreach ($preventivo['itinerario'] as $itinerario)
+                   
+
                 <section class="mb-5">
                     <div class="w-2/3 bg-[#8ebf22]/30 font-semibold p-1 mb-4">
                         <h3 class="text-lg pl-6">{{ $itinerario['titolo'] }}{{-- {{ $itinerario['titolo'] }} --}}</h3>
@@ -542,7 +546,37 @@
 
                 </section>
             @endforeach
+            @else
+             @foreach ($preventivo['itinerario'] as $itinerario)
+                   
+
+                <section class="mb-5">
+                    <div class="w-2/3 bg-[#8ebf22]/30 font-semibold p-1 mb-4">
+                        <h3 class="text-lg pl-6">{{ $itinerario['titolo'] }}{{-- {{ $itinerario['titolo'] }} --}}</h3>
+                        <div class="w-1/3"></div>
+                    </div>
+                    <div class="pl-6 pr-6">
+                        {!! $itinerario['descrizione'] !!}
+                    </div>
+                    
+
+                </section>
+            @endforeach
+            @if (!empty($preventivo['galleria_foto_itinerario']))
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 px-6 mt-6">
+                           @foreach (array_reverse($preventivo['galleria_foto_itinerario']) as $foto)
+                                <div class="aspect-[4/3] overflow-hidden rounded-lg">
+                                    <img loading="lazy"
+                                        class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                                        src="{{ $foto }}" alt="">
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+            @endif
         @endif
+
+        
 
 
         {{-- 
@@ -987,25 +1021,14 @@
                         l’anno
                         per qualsiasi esigenza medica <span class="font-semibold">Help-Line attiva</span> 24h su 24
                         tutti i giorni da parte del nostro personale via telefono
-                        e anche tramite <span class="font-semibold">app iOS e Android La Bussola on the road</span>
+                       </span>
                     </p>
                 </div>
             </div>
         </section>
 
-        <section class="flex mb-6">
-            <div class="w-1/5 md:w-1/3"></div>
-            <div class="w-4/5 md:w-2/3 text-right pr-6 bg-[#385B9B] text-white font-semibold p-2">
-                <h2 class="text-xl">Scarica la nostra App "La Bussola on the road"</h2>
-            </div>
-        </section>
-        <section class="flex mb-6">
-            <div class="w-1/3"></div>
-            <div class="w-2/3 flex items-center justify-center">
-                <img src="{{ $preventivo['store'] }}" alt="store" class="h-18 pl-6">
-                <img src="{{ $preventivo['icona'] }}" alt="icona" class="h-18 pl-6">
-            </div>
-        </section>
+      
+     
 
         <section class="flex">
             <div class="w-1/5 md:w-1/3"></div>
@@ -1016,12 +1039,12 @@
 
         <div class="text-right">
 
-            <p class="p-6"><span class="font-semibold">LA BUSSOLA srl – Agenzia viaggi e tour
+            <p class="p-6"><span class="font-semibold">Agenzia srl – Agenzia viaggi e tour
                     operator</span><br>
-                Via Altaguardia,1 – 20135 – Milano IT<br>
-                Cod. Fisc. / P. IVA 08114120960 – REA: MI – 2003676 – Capitale Sociale: € 10.000<br>
-                TEL +39 02 8219 6055 – WA +39 02 8088 6574<br>
-                EMAIL preventivi@labussola.it – PEC labussolamilano@pec.it</p>
+                Via .....<br>
+                Cod. Fisc. / P. IVA 123456789012<br>
+                TEL +39 1234567890<br>
+                EMAIL info@agenzia.it</p>
         </div>
 
     </main>

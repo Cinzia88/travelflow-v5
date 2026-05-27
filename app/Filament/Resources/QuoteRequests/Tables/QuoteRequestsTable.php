@@ -29,10 +29,12 @@ class QuoteRequestsTable
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('id')
+                    ->placeholder('-')
                     ->searchable()
                     ->label('Numero'),
                 TextColumn::make('created_by')
                     ->searchable()
+                    ->placeholder('-')
                     ->limit(20)
                     ->getStateUsing(function ($record) {
                         if ($record->creator) {
@@ -48,6 +50,10 @@ class QuoteRequestsTable
                     ->color(fn($record) => !$record->creator ? 'danger' : 'grey')
                     ->label('Creata da'),
                 TextColumn::make('oggetto')
+                    ->limit(30)
+                    ->tooltip(fn($state, $record) => $record->oggetto)
+                    ->formatStateUsing(fn($state, $record) => $record->oggetto)
+                    ->placeholder('-')
                     ->searchable()
                     ->label('Oggetto'),
                     /* 1. array_values(...)
@@ -68,23 +74,31 @@ Il risultato finale di queste tre operazioni è questo:[
 ] */
                 TextColumn::make('tipo_richiesta')
                     ->label('Tipo di Richiesta')
+                    ->placeholder('-')
                     ->formatStateUsing(function ($state) {
                         $options = array_merge(...array_values(OptionsTravel::getOptionsTravel()));
                         return $options[$state] ?? $state;
                     }),
                 TextColumn::make('meta_viaggio')
                     ->searchable()
+                    ->limit(20)
+                    ->tooltip(fn($record) => $record->meta_viaggio)
+                    ->formatStateUsing(fn($record) => $record->meta_viaggio)
+                    ->placeholder('-')
                     ->label('Meta'),
                 TextColumn::make('customer.nome')
                     ->label('Cliente')
+                    ->placeholder('-')
                     ->formatStateUsing(fn($state, $record) => "{$record->customer?->nome} {$record->customer?->cognome}")
                     ->tooltip(fn($state, $record) => "{$record->customer?->nome} {$record->customer?->cognome}")
                     ->searchable(),
                 TextColumn::make('stato_richiesta')
                     ->label('Stato Richiesta')
+                    ->placeholder('-')
                     ->badge(),
                 TextColumn::make('stato_preventivo')
                     ->label('Stato Preventivo')
+                    ->placeholder('-')
                     ->getStateUsing(function ($record) {
                         $preventivo = $record->preventives->last();
                         if (!$preventivo?->stato) {

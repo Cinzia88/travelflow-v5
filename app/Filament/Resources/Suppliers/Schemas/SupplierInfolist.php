@@ -11,10 +11,7 @@ class SupplierInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('affidabilita')
-                    ->placeholder('-'),
-                TextEntry::make('tipologia')
-                    ->placeholder('-'),
+
                 TextEntry::make('nome')
                     ->placeholder('-'),
                 TextEntry::make('cognome')

@@ -211,16 +211,12 @@ class EmailForm
 
                     ->required(),
                 Select::make('preventives')
-                    ->relationship('preventives', 'tag', modifyQueryUsing: function (Builder $query) {
-                        $user = auth()->user();
+                    ->relationship('preventives', 'id', modifyQueryUsing: function (Builder $query) {
 
                         // Filtra per stato
                         $query->where('stato', '!=', PreventiveStatus::BOZZA);
 
-                        // Se l'utente è agente, mostra solo i suoi preventivi
-                        if ($user->hasRole('agente')) {
-                            $query->where('created_by', $user->id);
-                        }
+                       
                         // Admin e Superadmin vedono tutti i preventivi (nessun filtro aggiuntivo)
             
                         return $query;
@@ -228,7 +224,6 @@ class EmailForm
                     ->searchable()
                     ->label('Preventivi')
                     ->preload()
-                    ->dehydrated(true)
                     ->getSearchResultsUsing(function (string $search) {
                         $currentUserId = auth()->id();
 
@@ -237,7 +232,7 @@ class EmailForm
                             ->where('stato', '!=', PreventiveStatus::BOZZA)
                             ->where(function ($query) use ($search) {
                                 $query->where('numero', 'like', "%{$search}%")
-                                    ->orWhere('tag', 'like', "%{$search}%")
+                                    ->orWhere('titolo', 'like', "%{$search}%")
                                     ->orWhereHas('creator', function ($q) use ($search) {
                                         $q->where('nome', 'like', "%{$search}%")
                                             ->orWhere('cognome', 'like', "%{$search}%")
@@ -257,7 +252,7 @@ class EmailForm
                                 return [
                                     $preventive->id =>
                                         'N° ' . $preventive->numero .
-                                        ' - ' . $preventive->tag .
+                                        ' - ' . $preventive->titolo .
                                         $agentName .
                                         ' (' . $preventive->created_at->format('d/m/Y') . ')',
                                 ];
@@ -265,7 +260,7 @@ class EmailForm
                     })
                     ->getOptionLabelFromRecordUsing(
                         fn(Preventive $record) =>
-                        "{$record->numero} - {$record->tag}" .
+                        "{$record->numero} - {$record->titolo}" .
                         ($record->creator
                             ? " | Creato da: " . trim("{$record->creator->nome} " . ($record->creator->cognome ?? ''))
                             : " | Creato da: Agente Rimosso"
@@ -306,6 +301,7 @@ class EmailForm
 
                 RichEditor::make('corpo_email')
                     ->label('Corpo Email')
+                    ->extraInputAttributes(['style' => 'min-height: 300px;'])
                     ->toolbarButtons([
                         'bold',
                         'bulletList',

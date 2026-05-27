@@ -55,7 +55,6 @@ class EmailResource extends Resource
         return [
             'index' => ListEmails::route('/'),
             'create' => CreateEmail::route('/create'),
-            'view' => ViewEmail::route('/{record}'),
             'edit' => EditEmail::route('/{record}/edit'),
         ];
     }

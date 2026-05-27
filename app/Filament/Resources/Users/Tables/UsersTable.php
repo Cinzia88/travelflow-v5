@@ -17,6 +17,7 @@ class UsersTable
             ->columns([
                 TextColumn::make('nome')
                     ->label('Nome')
+                    ->placeholder('-')
                     ->searchable()
                     ->formatStateUsing(function ($record) {
                         return $record->cognome
@@ -25,16 +26,19 @@ class UsersTable
                     }),
                 TextColumn::make('email')
                     ->label('Email')
-                    ->searchable(),
+                    ->searchable()
+                    ->placeholder('-'),
                 /*                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable(), */
                 TextColumn::make('telefono')
                     ->label('Telefono')
-                    ->searchable(),
+                    ->searchable()
+                    ->placeholder('-'),
                 TextColumn::make('roles.name')
                     ->label('Ruolo')
-                    ->searchable(),
+                    ->searchable()
+                    ->placeholder('-'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -17,12 +17,19 @@ class HotelsTable
             ->columns([
                TextColumn::make('supplier.nome')
                     ->label('Fornitore')
+                    ->placeholder('-')
                     ->searchable(),
                 TextColumn::make('nome')
+                    ->label('Hotel')
+                    ->placeholder('-')
                     ->searchable(),
                 TextColumn::make('indirizzo')
+                    ->label('Indirizzo')
+                    ->placeholder('-')
                     ->searchable(),
                 TextColumn::make('stelle')
+                    ->label('Stelle')
+                    ->placeholder('-')
                     ->sortable()
                     ->badge(),
             ])

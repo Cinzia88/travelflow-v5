@@ -60,12 +60,11 @@ Senza questa riga, la tua funzione hasErrors non saprebbe mai se un campo è vuo
         foreach ($fields as $field) {
             $value = $get($field);
 
-            $tipoVisualizzazione = $data['tipo_visualizzazione_foto'] ?? 'per_giorno';
-
+$tipoVisualizzazione = $get('tipo_visualizzazione_foto') ?? 'per_giorno';
 
             // --- 2. Logica Repeater / Array Complessi ---
             if (is_array($value)) {
-                if ($field === 'immagini_itinerario') {
+                /* if ($field === 'immagini_itinerario') {
                      
                     if ($tipoVisualizzazione === 'in_fondo') {
                         if (!empty($value) || count($value) < 3) {
@@ -75,24 +74,55 @@ Senza questa riga, la tua funzione hasErrors non saprebbe mai se un campo è vuo
 
                     }
                     continue; // Se la modalità è "in fondo" e non ci sono immagini, va bene, continua con il prossimo controllo
-                }
+                } */
+                
 
-                if ($field === 'itinerario') {
+               if ($field === 'itinerario') {
+    // 1. Controllo di base: se è vuoto, è errore
+    if (empty($value)) {
+        return true; 
+    }
+    // 2. Logica "in_fondo"
+    if ($tipoVisualizzazione === 'in_fondo') {
+        // Se nel repeater non ci sono, guarda nel database
+       $immaginiNelForm = is_array($value) ? $value : [];
+        $formValido = count($immaginiNelForm) >= 3;
 
-                    if (empty($value)) {
-                        return true; // Se non ci sono giorni -> Tab Rossa
-                    }
-                    if ($tipoVisualizzazione === 'per_giorno') {
-                        $valid = collect($value)->every(fn($i) => count($i['immagini'] ?? []) >= 3);
-                        /* nella collect controlla se se le immagini sono almeno 3 
-                        every controlla tutti gli elementi del Repeater.*/
+        // 2. Se non sono valide nel form, verifichiamo il database
+        if (!$formValido) {
+            $itineraryId = $get('itinerary_id');
+            $itinerary = $itineraryId ? \App\Models\Itinerary::find($itineraryId) : $record?->itinerary;
 
-                        if (!$valid)
-                            return true;/* if (!$valid) return true;
-Se il controllo fallisce (es. mancano immagini), la funzione si interrompe immediatamente e restituisce true (Segnale: "C'è un errore! Tab Rossa"). */
-                    }
-                    continue; /*  Se il controllo ha successo, continua con il prossimo step: quindi Tab verde */
-                }
+            $immaginiDb = $itinerary?->immagini_itinerario ?? [];
+            if (is_string($immaginiDb)) {
+                $immaginiDb = json_decode($immaginiDb, true) ?? [];
+            }
+            
+            // Se nemmeno il database ha almeno 3 immagini, allora è ERRORE
+            if (count($immaginiDb) < 3) {
+                return true; // Tab Rossa
+            }
+        }
+        
+        // Se arriviamo qui, o il form è valido o il DB è valido. Tutto OK.
+        continue;
+    }
+
+    // 3. Logica "per_giorno"
+    if ($tipoVisualizzazione === 'per_giorno') {
+
+        // Se almeno un giorno NON ha 3 immagini, è ERRORE (true)
+        $haErrori = collect($value)->contains(function ($giorno) {
+            return count($giorno['immagini'] ?? []) < 3;
+        });
+
+
+        return $haErrori;
+    }
+    
+    // Se non entra in nessun caso, ritorna false (nessun errore)
+   continue;
+}
 
                 if ($field === 'hotel_preventives') {
                     if (empty($value))

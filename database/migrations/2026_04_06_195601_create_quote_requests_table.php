@@ -20,16 +20,15 @@ return new class extends Migration {
             $table->string('email_cliente')->nullable();
             $table->string('meta_viaggio')->nullable();
             $table->enum('stato_richiesta', [
-                'inviata',
+                'creata',
                 'risposta pervenuta',
                 'in lavorazione',
                 'non completata',
                 'archiviata',
                 'evasa',
-            ])->default('inviata');
+            ])->default('creata');
             $table->date('scadenza')->nullable();
             $table->longText('note')->nullable();
-            $table->json('tipo_richieste')->nullable();
             $table->longText('motivazione_archivio')->nullable();
             $table->timestamps();
         });

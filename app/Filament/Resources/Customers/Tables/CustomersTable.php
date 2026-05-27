@@ -17,10 +17,12 @@ class CustomersTable
             ->columns([
                 TextColumn::make('nome')
                     ->label('Cliente')
+                    ->placeholder('-')
                     ->formatStateUsing(fn($state, $record) => trim("{$record->nome} {$record->cognome}"))
                     ->searchable(),
                 TextColumn::make('tipo_cliente')
                     ->label('Tipo Cliente')
+                    ->placeholder('-')
                     ->searchable(),
                 /*  Tables\Columns\TextColumn::make('ragione_sociale')
                     ->searchable(),
@@ -38,13 +40,15 @@ class CustomersTable
                     ->searchable(), */
                 TextColumn::make('email')
                     ->label('Email')
-                    ->searchable(),
+                    ->searchable()
+                    ->placeholder('-'),
                 TextColumn::make('telefono')
                     ->label('Telefono')
-                    ->searchable(),
+                    ->searchable()
+                    ->placeholder('-'),
                 TextColumn::make('created_at')
                     ->dateTime()
-                    ->sortable()
+                    ->sortable()    
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->dateTime()

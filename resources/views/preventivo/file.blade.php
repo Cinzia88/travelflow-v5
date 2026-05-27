@@ -573,6 +573,7 @@
     </table>
 
     @if (!empty($preventivo['itinerario']))
+    @if ($preventivo['tipo_visualizzazione_foto'] === 'per_giorno')
         @foreach ($preventivo['itinerario'] as $itinerario)
             <table width="100%" cellpadding="0" cellspacing="0"
                 style="margin-bottom:15px; border-collapse:collapse;">
@@ -605,6 +606,41 @@
                 </table>
             @endif
         @endforeach
+        @else
+         @foreach ($preventivo['itinerario'] as $itinerario)
+            <table width="100%" cellpadding="0" cellspacing="0"
+                style="margin-bottom:15px; border-collapse:collapse;">
+                <tr>
+                    <td width="67%"
+                        style="background-color:#d8ecb3; font-weight:bold; padding:8px 20px; font-size:16px;">
+                        {{ $itinerario['titolo'] }}
+                    </td>
+                    <td width="33%"></td>
+                </tr>
+            </table>
+            <div style="padding:0px 20px; margin-bottom:10px; font-size:14px;">
+                {!! $itinerario['descrizione'] !!}
+            </div>
+
+
+
+           
+        @endforeach
+         @if (!empty($preventivo['galleria_foto_itinerario']))
+                <table width="100%" cellpadding="5" cellspacing="0"
+                    style="border-collapse:collapse; margin-bottom:10px; padding:6px 20px;">
+                    <tr>
+                        @foreach (array_reverse($preventivo['galleria_foto_itinerario']) as $foto)
+                            <td width="33%" valign="top">
+                                <img src="{{ $foto }}"
+                                    style="width:100%; height:200px; object-fit:cover; border-radius:6px;">
+                            </td>
+                        @endforeach
+
+                    </tr>
+                </table>
+            @endif
+        @endif
     @endif
 
     <!-- Galleria immagini -->
@@ -1130,7 +1166,7 @@
                                 medica,
                                 <b>Help-Line attiva</b> 24h su 24 tutti i giorni da parte del nostro personale via
                                 telefono
-                                e anche tramite <b>app iOS e Android La Bussola on the road</b>.
+                               </span>
                             </p>
                         </td>
                     </tr>
@@ -1140,26 +1176,9 @@
     </table>
 
     <!-- APP -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:15px;  border-collapse:collapse;">
-        <tr>
-            <td width="33%"></td>
-            <td width="67%" align="right"
-                style="background-color:#385B9B; color:#fff; font-weight:bold; padding:10px 20px; font-size:18px;">
-                Scarica la nostra App "La Bussola on the road"
-            </td>
-        </tr>
-    </table>
+   
 
-    <table width="100%" cellpadding="10" cellspacing="0"
-        style="margin-bottom:20px; margin-top:40px; border-collapse:collapse;">
-        <tr>
-            <td width="33%"></td>
-            <td width="67%" align="center">
-                <img src="{{ $preventivo['store'] }}" alt="store" style="height:50px; margin-right:10px;">
-                <img src="{{ $preventivo['icona'] }}" alt="icona" style="height:50px;">
-            </td>
-        </tr>
-    </table>
+   
 
     <!-- CONTATTI -->
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:15px; border-collapse:collapse;">
@@ -1173,11 +1192,12 @@
     </table>
 
     <div style="text-align:right; padding:10px; font-size:12px; line-height:1.5;">
-        <p><b>LA BUSSOLA srl – Agenzia viaggi e tour operator</b><br>
-            Via Altaguardia,1 – 20135 – Milano IT<br>
-            Cod. Fisc. / P. IVA 08114120960 – REA: MI – 2003676 – Capitale Sociale: € 10.000<br>
-            TEL +39 02 8219 6055 – WA +39 02 8088 6574<br>
-            EMAIL: preventivi@labussola.it – PEC: labussolamilano@pec.it
+        <p><b>genzia srl – Agenzia viaggi e tour
+                    operator</span><br>
+                Via .....<br>
+                Cod. Fisc. / P. IVA 123456789012<br>
+                TEL +39 1234567890<br>
+                EMAIL info@agenzia.it
         </p>
     </div>
     </div>

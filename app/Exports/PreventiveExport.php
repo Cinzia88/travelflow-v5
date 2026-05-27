@@ -117,7 +117,7 @@ class PreventiveExport implements FromCollection, WithHeadings, ShouldAutoSize, 
             $preventive->customer
             ? trim($preventive->customer->nome . ' ' . ($preventive->customer->cognome ?? ''))
             : $preventive->customer_id,
-            $preventive->customer->email,
+            $preventive->customer->email ?? '',
             optional($preventive->data_preventivo)?->format('d/m/Y'),
             $preventive->meta_viaggio,
             $preventive->nome_itinerario,

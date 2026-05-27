@@ -10,7 +10,7 @@ class Supplier extends Model
         'email'      => 'array',
         'telefono'   => 'array',
         'sito_web'   => 'array',
-        'portale_web'=> 'array',
+       // 'portale_web'=> 'array',
         'allegati'   => 'array',
     ];
 

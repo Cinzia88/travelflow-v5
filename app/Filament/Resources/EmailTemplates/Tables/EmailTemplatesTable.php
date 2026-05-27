@@ -16,6 +16,7 @@ class EmailTemplatesTable
         return $table
             ->columns([
                 TextColumn::make('nome')
+                    ->placeholder('-')
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()

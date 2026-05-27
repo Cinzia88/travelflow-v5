@@ -36,7 +36,7 @@ Se provassi a scrivere questo nel tuo codice:
 
 PHP
 $array = [
-   PreventiveStatus::RIFIUTATO => 'Rifiutato', // SENZA ->value
+ PreventiveStatus::RIFIUTATO => 'Rifiutato', // SENZA ->value
 ];
 PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un array possono essere solo stringhe o numeri, non oggetti. */
         return [
@@ -59,9 +59,11 @@ PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un ar
             ->columns([
                 TextColumn::make('id')
                     ->searchable()
+                    ->placeholder('-')
                     ->label('Numero'),
                 TextColumn::make('customer.nome')
                     ->label('Cliente')
+                    ->placeholder('-')
                     ->formatStateUsing(fn($state, $record) => "{$record->customer?->nome} {$record->customer?->cognome}")
                     ->tooltip(fn($state, $record) => "{$record->customer?->nome} {$record->customer?->cognome}")
                     ->searchable(),
@@ -88,26 +90,39 @@ PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un ar
 
                 TextColumn::make('titolo')
                     ->label('Titolo')
+                    ->placeholder('-')
                     ->limit(20)
                     ->tooltip(fn($record) => $record->titolo) // mostra tutta la descrizione al passaggio del mouse
                     ->searchable(),
                 TextColumn::make('data_preventivo')
+                    ->label('Data Preventivo')
+                    ->placeholder('-')
                     ->date()
                     ->sortable(),
                 TextColumn::make('data_inizio_viaggio')
+                    ->label('Inizio Viaggio')
+                    ->placeholder('-')
                     ->date()
                     ->sortable(),
                 TextColumn::make('data_fine_viaggio')
+                    ->label('Fine Viaggio')
+                    ->placeholder('-')
                     ->date()
                     ->sortable(),
                 TextColumn::make('meta_viaggio')
+                    ->label('Meta Viaggio')
+                    ->placeholder('-')
+                    ->limit(20)
+                    ->tooltip(fn($record) => $record->meta_viaggio) // mostra tutta la
                     ->searchable()
                     ->label('Meta'),
                 TextColumn::make('stato')
+                    ->placeholder('-')
                     ->label('Stato')
                     ->badge(),
                 TextColumn::make('stato')
                     ->label('Stato')
+                    ->placeholder('-')
                     /*  ->formatStateUsing(function (string $state, $record): string {
                         return match ($state) {
                             'accettato' => 'Accetto il preventivo',
@@ -336,7 +351,7 @@ PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un ar
 
                                 Notification::make()
                                     ->title('Preventivo duplicato con successo!')
-                                    ->body("È stata creata una copia: {$new->tag}")
+                                    ->body("È stata creata una copia: {$new->titolo}. Puoi modificarla come preferisci.")
                                     ->success()
                                     ->send();
 
@@ -405,103 +420,103 @@ PHP ti darebbe un errore di tipo Illegal offset type, perché le chiavi di un ar
 
             ->toolbarActions([
                 BulkActionGroup::make([
-                   
-                        BulkAction::make('export-excel')
-                            ->label('Esporta Excel')
-                            ->icon('heroicon-o-document-text')
-                            ->color('success')
-                            ->form([
-                                CheckboxList::make('columns')
-                                    ->label('Colonne da esportare')
-                                    ->options([
-                                        'id' => 'ID',
-                                        'numero' => 'Numero',
-                                        'anno' => 'Anno',
-                                        'titolo' => 'Titolo',
-                                        'created_by' => 'Creato da',
-                                        'customer_id' => 'Cliente',
-                                        'email_cliente' => 'Email Cliente',
-                                        'data_preventivo' => 'Data Preventivo',
-                                        'meta_viaggio' => 'Meta Viaggio',
-                                        'nome_itinerario' => 'Nome Itinerario',
-                                        'data_inizio_viaggio' => 'Data Inizio Viaggio',
-                                        'data_fine_viaggio' => 'Data Fine Viaggio',
-                                        'numero_persone' => 'Numero Persone',
-                                        'numero_gratuita' => 'Numero Gratuita',
-                                        'prezzo_per_persona' => 'Prezzo per Persona',
-                                        'markup' => 'Markup',
-                                        'totale_incasso' => 'Totale Incasso',
-                                        'stato' => 'Stato',
-                                    ])
-                                    ->default([
-                                        'id',
-                                        'numero',
-                                        'anno',
-                                        'titolo',
-                                        'created_by',
-                                        'customer_id',
-                                        'email_cliente',
-                                        'data_preventivo',
-                                        'meta_viaggio',
-                                        'nome_itinerario',
-                                        'data_inizio_viaggio',
-                                        'data_fine_viaggio',
-                                        'numero_persone',
-                                        'numero_gratuita',
-                                        'prezzo_per_persona',
-                                        'markup',
-                                        'totale_incasso',
-                                        'stato',
-                                    ])
-                                    ->columns(2)
-                                    ->required(),
 
-                                //  Aggiungiamo i campi del range di date
-                                DatePicker::make('from')
-                                    ->label('Da')
-                                    ->placeholder('Data inizio')
-                                    ->native(false), // opzionale, per UI più carina
+                    BulkAction::make('export-excel')
+                        ->label('Esporta Excel')
+                        ->icon('heroicon-o-document-text')
+                        ->color('success')
+                        ->form([
+                            CheckboxList::make('columns')
+                                ->label('Colonne da esportare')
+                                ->options([
+                                    'id' => 'ID',
+                                    'numero' => 'Numero',
+                                    'anno' => 'Anno',
+                                    'titolo' => 'Titolo',
+                                    'created_by' => 'Creato da',
+                                    'customer_id' => 'Cliente',
+                                    'email_cliente' => 'Email Cliente',
+                                    'data_preventivo' => 'Data Preventivo',
+                                    'meta_viaggio' => 'Meta Viaggio',
+                                    'nome_itinerario' => 'Nome Itinerario',
+                                    'data_inizio_viaggio' => 'Data Inizio Viaggio',
+                                    'data_fine_viaggio' => 'Data Fine Viaggio',
+                                    'numero_persone' => 'Numero Persone',
+                                    'numero_gratuita' => 'Numero Gratuita',
+                                    'prezzo_per_persona' => 'Prezzo per Persona',
+                                    'markup' => 'Markup',
+                                    'totale_incasso' => 'Totale Incasso',
+                                    'stato' => 'Stato',
+                                ])
+                                ->default([
+                                    'id',
+                                    'numero',
+                                    'anno',
+                                    'titolo',
+                                    'created_by',
+                                    'customer_id',
+                                    'email_cliente',
+                                    'data_preventivo',
+                                    'meta_viaggio',
+                                    'nome_itinerario',
+                                    'data_inizio_viaggio',
+                                    'data_fine_viaggio',
+                                    'numero_persone',
+                                    'numero_gratuita',
+                                    'prezzo_per_persona',
+                                    'markup',
+                                    'totale_incasso',
+                                    'stato',
+                                ])
+                                ->columns(2)
+                                ->required(),
 
-                                DatePicker::make('until')
-                                    ->label('A')
-                                    ->placeholder('Data fine')
-                                    ->native(false),
-                            ])
-                            ->action(function (array $data, $records) {
-                                $ids = $records->pluck('id')->toArray();
-                                //Questa riga trasforma la tua collezione di modelli in un semplice elenco di numeri (gli ID).
-                                $columns = $data['columns'] ?? [];
-                                $from = $data['from'] ?? null;
-                                $until = $data['until'] ?? null;
+                            //  Aggiungiamo i campi del range di date
+                            DatePicker::make('from')
+                                ->label('Da')
+                                ->placeholder('Data inizio')
+                                ->native(false), // opzionale, per UI più carina
 
-                                // Applichiamo il filtro per date se specificato
-                                $query = Preventive::query()->whereIn('id', $ids);
-                                /* whereIn: È l'addetto alla sicurezza che prende ogni persona (ogni record) e controlla: "Il tuo ID è presente nella mia lista degli invitati?".
+                            DatePicker::make('until')
+                                ->label('A')
+                                ->placeholder('Data fine')
+                                ->native(false),
+                        ])
+                        ->action(function (array $data, $records) {
+                            $ids = $records->pluck('id')->toArray();
+                            //Questa riga trasforma la tua collezione di modelli in un semplice elenco di numeri (gli ID).
+                            $columns = $data['columns'] ?? [];
+                            $from = $data['from'] ?? null;
+                            $until = $data['until'] ?? null;
+
+                            // Applichiamo il filtro per date se specificato
+                            $query = Preventive::query()->whereIn('id', $ids);
+                            /* whereIn: È l'addetto alla sicurezza che prende ogni persona (ogni record) e controlla: "Il tuo ID è presente nella mia lista degli invitati?".
 
 Se sì, ti fa passare (il record viene incluso nel risultato).
 
 Se no, ti lascia fuori (il record viene scartato). non si usa where perché whereIn è più efficiente per filtrare per una lista di ID., anche perché $ids non considera solo un ID, ma una lista di ID. */
-                                if ($from) {
-                                    $query->whereDate('data_preventivo', '>=', $from);
-                                }
-                                if ($until) {
-                                    $query->whereDate('data_preventivo', '<=', $until);
-                                }
+                            if ($from) {
+                                $query->whereDate('data_preventivo', '>=', $from);
+                            }
+                            if ($until) {
+                                $query->whereDate('data_preventivo', '<=', $until);
+                            }
 
-                                $filteredIds = $query->pluck('id')->toArray();
+                            $filteredIds = $query->pluck('id')->toArray();
 
-                                if (empty($filteredIds)) {
-                                    Notification::make()
-                                        ->title('Nessun preventivo da esportare')
-                                        ->body('Non ci sono preventivi che corrispondono ai criteri selezionati.')
-                                        ->warning()
-                                        ->send();
-                                    return;
-                                }
+                            if (empty($filteredIds)) {
+                                Notification::make()
+                                    ->title('Nessun preventivo da esportare')
+                                    ->body('Non ci sono preventivi che corrispondono ai criteri selezionati.')
+                                    ->warning()
+                                    ->send();
+                                return;
+                            }
 
-                                $filename = 'preventivi_' . now()->format('Ymd_His') . '.xlsx';
-                                return Excel::download(new PreventiveExport($filteredIds, $columns), $filename);
-                            }),
+                            $filename = 'preventivi_' . now()->format('Ymd_His') . '.xlsx';
+                            return Excel::download(new PreventiveExport($filteredIds, $columns), $filename);
+                        }),
                     DeleteBulkAction::make(),
                 ]),
             ]);

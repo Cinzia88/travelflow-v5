@@ -44,6 +44,8 @@ use App\Models\Supplier;
 use Illuminate\Support\Facades\File;
 use Filament\Schemas\Components\View;
 use App\Models\TransportCompany;
+use Filament\Forms\Components\TagsInput;
+use Illuminate\Database\Eloquent\Model;
 
 
 
@@ -755,7 +757,7 @@ class PreventiveForm
                             'hotel_preventives',
                         ])
                             ->hidden(condition: fn(Get $get): bool => $get('gita_giornaliera') === true)
-                          
+
                             ->schema([
                                 /*  TextEntry::make('info_persone_forzate')
                                      ->state(function (Get $get) {
@@ -851,63 +853,95 @@ class PreventiveForm
                                                                     TextInput::make('indirizzo')
                                                                         ->maxLength(255)
                                                                         ->default(null),
-                                                                    Repeater::make('telefono')
-                                                                        ->schema([
-                                                                            TextInput::make('telefono')
-                                                                                ->label('Telefono')
-                                                                                ->required(),
+
+
+                                                                    TagsInput::make('telefono')
+                                                                        ->label('Telefoni')
+                                                                        ->placeholder('Inserisci un numero di telefono e premi Invio')
+                                   
+                                                                        ->rule(function (Get $get, ?Model $record) {
+                                                                            return function (string $attribute, $value, \Closure $fail) use ($record) {
+                                                                                $emails = is_array($value) ? $value : [];
+
+                                                                                foreach ($emails as $email) {
+                                                                                    $exists = Supplier::whereJsonContains('telefono', $email)
+                                                                                        ->when($record, fn($q) => $q->where('id', '!=', $record->id))
+                                                                                        ->exists();
+
+                                                                                    if ($exists) {
+                                                                                        $fail("Il telefono \"{$email}\" è già associato ad un altro fornitore.");
+                                                                                    }
+                                                                                }
+                                                                            };
+                                                                        })
+                                                                        ->required(),
+
+                                                                    TagsInput::make('email')
+                                                                        ->label('Indirizzi Email')
+                                                                        ->placeholder('Inserisci un\'email e premi Invio')
+                                                                        ->nestedRecursiveRules([
+                                                                            'email',
                                                                         ])
-                                                                        ->addActionLabel('Aggiungi Numero di Telefono')
-                                                                        ->label('Numeri di Telefono')
-                                                                        ->columns(1)
-                                                                        ->collapsible()
-                                                                        ->defaultItems(1),
-                                                                    Repeater::make('email')
-                                                                        ->schema([
-                                                                            TextInput::make('email')
-                                                                                ->label('Email')
-                                                                                ->email()
-                                                                                ->unique(ignorable: fn($record) => $record)
-                                                                                ->required(),
-                                                                        ])
-                                                                        ->addActionLabel('Aggiungi Email')
-                                                                        ->label('Emails')
-                                                                        ->columns(1)
-                                                                        ->collapsible()
-                                                                        ->defaultItems(1),
-                                                                    Repeater::make('sito_web')
-                                                                        ->schema([
-                                                                            TextInput::make('sito_web')
-                                                                                ->label('Sito Web')
-                                                                                ->required(),
-                                                                        ])
-                                                                        ->addActionLabel('Aggiungi Sito Web')
+                                                                        ->rule(function (Get $get, ?Model $record) {
+                                                                            return function (string $attribute, $value, \Closure $fail) use ($record) {
+                                                                                $emails = is_array($value) ? $value : [];
+
+                                                                                foreach ($emails as $email) {
+                                                                                    $exists = Supplier::whereJsonContains('email', $email)
+                                                                                        ->when($record, fn($q) => $q->where('id', '!=', $record->id))
+                                                                                        ->exists();
+
+                                                                                    if ($exists) {
+                                                                                        $fail("L'email \"{$email}\" è già associata ad un altro fornitore.");
+                                                                                    }
+                                                                                }
+                                                                            };
+                                                                        })
+                                                                        ->required(),
+
+
+                                                                    TagsInput::make('sito_web')
                                                                         ->label('Siti Web')
-                                                                        ->columns(1)
-                                                                        ->collapsible()
-                                                                        ->defaultItems(1),
-                                                                    Repeater::make('portale_web')
-                                                                        ->addActionLabel('Aggiungi Portale Web')
-                                                                        ->schema([
-                                                                            RichEditor::make('portale_web')
-                                                                                ->label('Portale Web')
-                                                                                ->default("<h3>Credenziali</h3><p>Utente: <br>Password:</p>")
-                                                                                ->toolbarButtons([
-                                                                                    'bold',
-                                                                                    'bulletList',
-                                                                                    'italic',
-                                                                                    'orderedList',
-                                                                                    'redo',
-                                                                                    'link',
-                                                                                    'underline',
-                                                                                    'undo',
-                                                                                ])
-                                                                                ->required(),
-                                                                        ])
-                                                                        ->label('Portali Web')
-                                                                        ->columns(1)
-                                                                        ->collapsible()
-                                                                        ->defaultItems(1),
+                                                                        ->placeholder('Inserisci un sito web e premi Invio')
+                                                       
+                                                                        ->rule(function (Get $get, ?Model $record) {
+                                                                            return function (string $attribute, $value, \Closure $fail) use ($record) {
+                                                                                $emails = is_array($value) ? $value : [];
+
+                                                                                foreach ($emails as $email) {
+                                                                                    $exists = Supplier::whereJsonContains('sito_web', $email)
+                                                                                        ->when($record, fn($q) => $q->where('id', '!=', $record->id))
+                                                                                        ->exists();
+
+                                                                                    if ($exists) {
+                                                                                        $fail("Il sito web \"{$email}\" è già associato ad un altro fornitore.");
+                                                                                    }
+                                                                                }
+                                                                            };
+                                                                        })
+                                                                        ->required(),
+                                                                    /*  Repeater::make('portale_web')
+                                                                         ->addActionLabel('Aggiungi Portale Web')
+                                                                         ->schema([
+                                                                             RichEditor::make('portale_web')
+                                                                                 ->label('Portale Web')
+                                                                                 ->default("<h3>Credenziali</h3><p>Utente: <br>Password:</p>")
+                                                                                 ->toolbarButtons([
+                                                                                     'bold',
+                                                                                     'bulletList',
+                                                                                     'italic',
+                                                                                     'orderedList',
+                                                                                     'redo',
+                                                                                     'link',
+                                                                                     'underline',
+                                                                                     'undo',
+                                                                                 ])
+                                                                                 ->required(),
+                                                                         ])
+                                                                         ->label('Portali Web')
+                                                                         ->columns(1)
+                                                                         ->collapsible()
+                                                                         ->defaultItems(1), */
                                                                     TextInput::make('regione')
                                                                         ->maxLength(255)
                                                                         ->default(null),
@@ -928,7 +962,6 @@ class PreventiveForm
                                                                     Textarea::make('descrizione')
                                                                         ->columnSpanFull(),
                                                                     Textarea::make('note')
-                                                                        ->label('Note ad uso interno')
                                                                         ->columnSpanFull(),
 
                                                                 ]),
@@ -1014,63 +1047,95 @@ class PreventiveForm
                                                                 TextInput::make('indirizzo')
                                                                     ->maxLength(255)
                                                                     ->default(null),
-                                                                Repeater::make('telefono')
-                                                                    ->schema([
-                                                                        TextInput::make('telefono')
-                                                                            ->label('Telefono')
-                                                                            ->required(),
+
+
+                                                                TagsInput::make('telefono')
+                                                                    ->label('Telefoni')
+                                                                    ->placeholder('Inserisci un numero di telefono e premi Invio')
+                                                             
+                                                                    ->rule(function (Get $get, ?Model $record) {
+                                                                        return function (string $attribute, $value, \Closure $fail) use ($record) {
+                                                                            $emails = is_array($value) ? $value : [];
+
+                                                                            foreach ($emails as $email) {
+                                                                                $exists = Supplier::whereJsonContains('telefono', $email)
+                                                                                    ->when($record, fn($q) => $q->where('id', '!=', $record->id))
+                                                                                    ->exists();
+
+                                                                                if ($exists) {
+                                                                                    $fail("Il telefono \"{$email}\" è già associato ad un altro fornitore.");
+                                                                                }
+                                                                            }
+                                                                        };
+                                                                    })
+                                                                    ->required(),
+
+                                                                TagsInput::make('email')
+                                                                    ->label('Indirizzi Email')
+                                                                    ->placeholder('Inserisci un\'email e premi Invio')
+                                                                    ->nestedRecursiveRules([
+                                                                        'email',
                                                                     ])
-                                                                    ->addActionLabel('Aggiungi Numero di Telefono')
-                                                                    ->label('Numeri di Telefono')
-                                                                    ->columns(1)
-                                                                    ->collapsible()
-                                                                    ->defaultItems(1),
-                                                                Repeater::make('email')
-                                                                    ->schema([
-                                                                        TextInput::make('email')
-                                                                            ->label('Email')
-                                                                            ->email()
-                                                                            ->unique(ignorable: fn($record) => $record)
-                                                                            ->required(),
-                                                                    ])
-                                                                    ->addActionLabel('Aggiungi Email')
-                                                                    ->label('Emails')
-                                                                    ->columns(1)
-                                                                    ->collapsible()
-                                                                    ->defaultItems(1),
-                                                                Repeater::make('sito_web')
-                                                                    ->schema([
-                                                                        TextInput::make('sito_web')
-                                                                            ->label('Sito Web')
-                                                                            ->required(),
-                                                                    ])
-                                                                    ->addActionLabel('Aggiungi Sito Web')
+                                                                    ->rule(function (Get $get, ?Model $record) {
+                                                                        return function (string $attribute, $value, \Closure $fail) use ($record) {
+                                                                            $emails = is_array($value) ? $value : [];
+
+                                                                            foreach ($emails as $email) {
+                                                                                $exists = Supplier::whereJsonContains('email', $email)
+                                                                                    ->when($record, fn($q) => $q->where('id', '!=', $record->id))
+                                                                                    ->exists();
+
+                                                                                if ($exists) {
+                                                                                    $fail("L'email \"{$email}\" è già associata ad un altro fornitore.");
+                                                                                }
+                                                                            }
+                                                                        };
+                                                                    })
+                                                                    ->required(),
+
+
+                                                                TagsInput::make('sito_web')
                                                                     ->label('Siti Web')
-                                                                    ->columns(1)
-                                                                    ->collapsible()
-                                                                    ->defaultItems(1),
-                                                                Repeater::make('portale_web')
-                                                                    ->addActionLabel('Aggiungi Portale Web')
-                                                                    ->schema([
-                                                                        RichEditor::make('portale_web')
-                                                                            ->label('Portale Web')
-                                                                            ->default("<h3>Credenziali</h3><p>Utente: <br>Password:</p>")
-                                                                            ->toolbarButtons([
-                                                                                'bold',
-                                                                                'bulletList',
-                                                                                'italic',
-                                                                                'orderedList',
-                                                                                'redo',
-                                                                                'link',
-                                                                                'underline',
-                                                                                'undo',
-                                                                            ])
-                                                                            ->required(),
-                                                                    ])
-                                                                    ->label('Portali Web')
-                                                                    ->columns(1)
-                                                                    ->collapsible()
-                                                                    ->defaultItems(1),
+                                                                    ->placeholder('Inserisci un sito web e premi Invio')
+                                                     
+                                                                    ->rule(function (Get $get, ?Model $record) {
+                                                                        return function (string $attribute, $value, \Closure $fail) use ($record) {
+                                                                            $emails = is_array($value) ? $value : [];
+
+                                                                            foreach ($emails as $email) {
+                                                                                $exists = Supplier::whereJsonContains('sito_web', $email)
+                                                                                    ->when($record, fn($q) => $q->where('id', '!=', $record->id))
+                                                                                    ->exists();
+
+                                                                                if ($exists) {
+                                                                                    $fail("Il sito web \"{$email}\" è già associato ad un altro fornitore.");
+                                                                                }
+                                                                            }
+                                                                        };
+                                                                    })
+                                                                    ->required(),
+                                                                /*  Repeater::make('portale_web')
+                                                                     ->addActionLabel('Aggiungi Portale Web')
+                                                                     ->schema([
+                                                                         RichEditor::make('portale_web')
+                                                                             ->label('Portale Web')
+                                                                             ->default("<h3>Credenziali</h3><p>Utente: <br>Password:</p>")
+                                                                             ->toolbarButtons([
+                                                                                 'bold',
+                                                                                 'bulletList',
+                                                                                 'italic',
+                                                                                 'orderedList',
+                                                                                 'redo',
+                                                                                 'link',
+                                                                                 'underline',
+                                                                                 'undo',
+                                                                             ])
+                                                                             ->required(),
+                                                                     ])
+                                                                     ->label('Portali Web')
+                                                                     ->columns(1)
+                                                                     ->collapsible()
+                                                                     ->defaultItems(1), */
                                                                 TextInput::make('regione')
                                                                     ->maxLength(255)
                                                                     ->default(null),
@@ -1091,7 +1156,6 @@ class PreventiveForm
                                                                 Textarea::make('descrizione')
                                                                     ->columnSpanFull(),
                                                                 Textarea::make('note')
-                                                                    ->label('Note ad uso interno')
                                                                     ->columnSpanFull(),
 
                                                             ]),
@@ -2762,7 +2826,7 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
                                     ->dehydrated(true)
                                     ->live()
                                     ->readOnly()
-                                    ->required()
+                                   ->required(fn($livewire) => !$livewire->isDraft)
                                     ->afterStateHydrated(function ($state, Set $set, $record) {
                                         // SEMPRE forza l'email del cliente corrente
                                         if ($record && $record->customer && $record->customer->email) {

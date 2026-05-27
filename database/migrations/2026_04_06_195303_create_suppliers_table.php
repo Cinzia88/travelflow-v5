@@ -13,8 +13,6 @@ return new class extends Migration
     {
         Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
-            $table->string('affidabilita')->nullable();
-            $table->string('tipologia')->nullable();
             $table->string('nome')->nullable();
             $table->string('cognome')->nullable();
             $table->string('ragione_sociale')->nullable();
