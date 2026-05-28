@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Mail\MultiplePreventives;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
+use function PHPUnit\Framework\isArray;
 
 class Email extends Model
 {
-     protected $casts = [
+    protected $casts = [
         'email_cc' => 'array',
         'allegati' => 'array',
         'is_draft' => 'boolean',
@@ -14,6 +17,7 @@ class Email extends Model
 
     protected static function booted()
     {
+
         static::creating(function ($email) {
             if (auth()->check()) {
                 $email->sent_by = auth()->id();
@@ -24,6 +28,8 @@ class Email extends Model
         static::deleting(function ($email) {
             $email->preventives()->detach();
         });
+
+       
     }
 
     public function sentBy()
@@ -35,7 +41,7 @@ class Email extends Model
     {
         return $this->belongsTo(EmailTemplate::class, 'email_template_id');
     }
-     public function preventives()
+    public function preventives()
     {
         return $this->belongsToMany(Preventive::class, 'email_preventive');
     }

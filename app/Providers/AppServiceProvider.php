@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Email;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Email::observe(\App\Observers\EmailObserver::class);
         Model::unguard();
     }
 }

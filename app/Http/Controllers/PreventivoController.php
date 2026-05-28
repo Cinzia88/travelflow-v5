@@ -72,5 +72,37 @@ class PreventivoController extends Controller
     abort(404, 'File non trovato.');
 }
 
+public function showAllegato($cod_alfa)
+{
+    $preventive = Preventive::where('cod_alfa', $cod_alfa)->firstOrFail();
+
+   
+
+    if ($preventive->allego_file) {
+       
+
+        $file_preventivo = $preventive->file_preventivo ?? null;
+        if ($file_preventivo) {
+            $allegato = storage_path('app/public/' . $file_preventivo);
+
+            if (file_exists($allegato)) {
+                $ext = strtolower(pathinfo($allegato, PATHINFO_EXTENSION));
+                $mime = match($ext) {
+                    'pdf' => 'application/pdf',
+                    'doc' => 'application/msword',
+                    'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    default => 'application/octet-stream'
+                };
+
+                return response()->file($allegato, [
+                    'Content-Type' => $mime,
+                    'Content-Disposition' => 'inline; filename="' . basename($allegato) . '"',
+                ]);
+            }
+        }
+    }
+
+    abort(404, 'File non trovato.');
+}
 
 }

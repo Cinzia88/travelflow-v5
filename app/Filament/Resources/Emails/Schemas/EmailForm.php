@@ -316,6 +316,7 @@ class EmailForm
                 FileUpload::make('allegati')
                     ->multiple()
                     ->maxSize(3072)
+                    ->disk('private')
                     ->acceptedFileTypes(['application/pdf'])
                     ->preserveFilenames()
                     ->directory('allegati_email')

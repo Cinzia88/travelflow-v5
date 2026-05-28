@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PreventivoController;
+use App\Models\Email;
 use App\Models\Preventive;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Route;
@@ -11,7 +12,20 @@ use Illuminate\Http\Response;
 Route::get('/preventivi/{cod_alfa}', [PreventivoController::class, 'show'])->name('preventivo.show');
 
 Route::get('/polizza/{cod_alfa}', [PreventivoController::class, 'showPolizza'])->name('polizza.show');
+Route::get('/preventivo/{cod_alfa}/allegato', [PreventivoController::class, 'showAllegato'])->name('preventivo.show.allegato');
+Route::get('/scarica-preventivo/{email}/{filename}', function (Email $email, $filename) {
+    // 1. Controllo di sicurezza: 
+    // Puoi verificare se l'utente è loggato O se l'email corrisponde
+    // Esempio: assicurati che il file appartenga davvero a quell'email
+    $path = 'allegati_email/' . $filename;
+    
+    if (!Storage::disk('private')->exists($path)) {
+        abort(404);
+    }
 
+    // 2. Ritorna il file al browser come download
+    return Storage::disk('private')->download($path);
+})->name('download.email.allegato');
 
 Route::get('/preventivi/{cod_alfa}/risposta', [PreventivoController::class, 'risposta'])->name('preventivo.risposta');
 
