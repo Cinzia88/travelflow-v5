@@ -15,6 +15,7 @@ class Email extends Model
         'is_draft' => 'boolean',
     ];
 
+
     protected static function booted()
     {
 

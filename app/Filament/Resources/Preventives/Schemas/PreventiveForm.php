@@ -383,8 +383,12 @@ class PreventiveForm
                                                 TextInput::make('telefono')
                                                     ->label('Telefono')
                                                     ->tel()
-                                                    ->maxLength(255)
-                                                    ->default(null),
+                                                    ->helperText('Formato: +39 seguito dal numero (es. +393331234567)')
+                                                    ->regex('/^\+39[0-9]{9,10}$/')
+                                                    ->validationMessages([
+                                                        'regex' => 'Il numero deve iniziare con +39 seguito da 9-10 cifre',
+                                                    ])
+                                                    ->required(),
                                             ])
                                     ])
                                     ->columns(2),
@@ -439,7 +443,6 @@ class PreventiveForm
                                             ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
                                             ->required(fn($livewire) => !$livewire->isDraft)
                                             ->preserveFilenames()
-                                            ->minSize(200)
                                             ->maxSize(1024)
                                             ->helperText('Carica un\'immagine (.png, .jpg o .jpeg) di almeno 200 KB per garantire una buona qualità nel preventivo')
                                             ->directory('preventivi')
@@ -858,7 +861,7 @@ class PreventiveForm
                                                                     TagsInput::make('telefono')
                                                                         ->label('Telefoni')
                                                                         ->placeholder('Inserisci un numero di telefono e premi Invio')
-                                   
+
                                                                         ->rule(function (Get $get, ?Model $record) {
                                                                             return function (string $attribute, $value, \Closure $fail) use ($record) {
                                                                                 $emails = is_array($value) ? $value : [];
@@ -903,7 +906,7 @@ class PreventiveForm
                                                                     TagsInput::make('sito_web')
                                                                         ->label('Siti Web')
                                                                         ->placeholder('Inserisci un sito web e premi Invio')
-                                                       
+
                                                                         ->rule(function (Get $get, ?Model $record) {
                                                                             return function (string $attribute, $value, \Closure $fail) use ($record) {
                                                                                 $emails = is_array($value) ? $value : [];
@@ -1052,7 +1055,7 @@ class PreventiveForm
                                                                 TagsInput::make('telefono')
                                                                     ->label('Telefoni')
                                                                     ->placeholder('Inserisci un numero di telefono e premi Invio')
-                                                             
+
                                                                     ->rule(function (Get $get, ?Model $record) {
                                                                         return function (string $attribute, $value, \Closure $fail) use ($record) {
                                                                             $emails = is_array($value) ? $value : [];
@@ -1097,7 +1100,7 @@ class PreventiveForm
                                                                 TagsInput::make('sito_web')
                                                                     ->label('Siti Web')
                                                                     ->placeholder('Inserisci un sito web e premi Invio')
-                                                     
+
                                                                     ->rule(function (Get $get, ?Model $record) {
                                                                         return function (string $attribute, $value, \Closure $fail) use ($record) {
                                                                             $emails = is_array($value) ? $value : [];
@@ -2195,7 +2198,7 @@ class PreventiveForm
                         ValidatedTab::make('Riepilogo e Costi', [
                             'prezzo_per_persona',
                             'markup',
-                            'prezzo_forzato',
+                            //'prezzo_forzato',
                             'totale_incasso',
                             'stato',
                         ])
@@ -2244,11 +2247,11 @@ class PreventiveForm
                                                     }),
 
                                                 // --- Prezzo Forzato ---
-                                                TextInput::make('prezzo_forzato')
-                                                    ->label('Prezzo Forzato')
-                                                    ->prefix('€')
-                                                    ->numeric()
-                                                    ->required(fn($livewire) => !$livewire->isDraft),
+                                                /*  TextInput::make('prezzo_forzato')
+                                                     ->label('Prezzo Forzato')
+                                                     ->prefix('€')
+                                                     ->numeric()
+                                                     ->required(fn($livewire) => !$livewire->isDraft), */
 
                                                 /*  TextInput::make('n_persone_forzato')
                                                      ->label('N° Persone Forzato')
@@ -2265,7 +2268,7 @@ class PreventiveForm
                                                          $set('prezzo_per_persona', $quota);
                                                          $set('totale_incasso', $tot);
                                                      }), */
-                                            ])->columns(3),
+                                            ])->columns(2),
                                     ])->columnSpanFull(),
 
                                 Select::make('stato')
@@ -2826,7 +2829,7 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
                                     ->dehydrated(true)
                                     ->live()
                                     ->readOnly()
-                                   ->required(fn($livewire) => !$livewire->isDraft)
+                                    ->required(fn($livewire) => !$livewire->isDraft)
                                     ->afterStateHydrated(function ($state, Set $set, $record) {
                                         // SEMPRE forza l'email del cliente corrente
                                         if ($record && $record->customer && $record->customer->email) {
@@ -2931,7 +2934,7 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
                                                         return empty($foto) || count($foto) < 3;
                                                     });
 
-                                                    if ($itinerariSenzaFoto->isNotEmpty()) {
+                                                    if ($itinerariSenzaFoto->isNotEmpty() && ($formData['tipo_visualizzazione_foto'] === 'per_giorno')) {
                                                         Notification::make()
                                                             ->title('Salvataggio interrotto')
                                                             ->body('Le tappe dell\'itinerario non hanno le 3 immagini richieste.')
@@ -3172,7 +3175,7 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
                                                         $mail->cc($email->email_cc);
                                                     }
 
-                                                    // $mail->send(new \App\Mail\PreventiveCreatedMail($preventivo, $email));
+                                                     $mail->send(new \App\Mail\PreventiveCreatedMail($preventivo, $email));
                                     
                                                     \Filament\Notifications\Notification::make()
                                                         ->title('Email inviata con successo')

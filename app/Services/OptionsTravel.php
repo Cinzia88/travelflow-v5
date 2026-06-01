@@ -10,6 +10,10 @@ class OptionsTravel
     {
 
         return [
+            'Città & Arte' => [
+                'city_break' => '🏛️ City Break / Weekend',
+                'tour_culturale' => '🎨 Tour Culturale',
+            ],
             'Neve & Inverno' => [
                 'settimana_bianca' => '❄️ Settimana Bianca',
                 'mercatini' => '🎄 Mercatini di Natale',

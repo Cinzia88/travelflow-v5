@@ -56,7 +56,7 @@ class QuoteRequestsTable
                     ->placeholder('-')
                     ->searchable()
                     ->label('Oggetto'),
-                    /* 1. array_values(...)
+                /* 1. array_values(...)
 Questo comando prende il tuo array multidimensionale QuoteRequestForm::getOpzioniRichiesta() e scarta le chiavi di primo livello (ovvero le categorie: 'Neve & Inverno', 'Mare & Relax', ecc.).
 Ti ritrovi con un array che contiene solo gli array interni (i "gruppi").
 
@@ -67,10 +67,10 @@ Senza questo, array_merge riceverebbe un unico array (quello con i gruppi), ment
 3. array_merge(...)
 Questa funzione prende tutti gli array che gli abbiamo passato (grazie allo splat operator) e li fonde in un unico grande array piatto.
 Il risultato finale di queste tre operazioni è questo:[
-    'settimana_bianca' => '❄️ Settimana Bianca',
-    'mercatini' => '🎄 Mercatini di Natale',
-    'mare_italia' => '🇮🇹 Mare Italia',
-    // ... tutte le altre voci fuse insieme
+'settimana_bianca' => '❄️ Settimana Bianca',
+'mercatini' => '🎄 Mercatini di Natale',
+'mare_italia' => '🇮🇹 Mare Italia',
+// ... tutte le altre voci fuse insieme
 ] */
                 TextColumn::make('tipo_richiesta')
                     ->label('Tipo di Richiesta')
@@ -286,6 +286,19 @@ Il risultato finale di queste tre operazioni è questo:[
                             ->modalHeading(fn($record): string => 'Visualizza Richiesta'),
                         EditAction::make(),
                         DeleteAction::make()
+                            ->before(function ($record, $action) {
+                                // Verifica se esistono preventivi associati
+                                if ($record->preventives()->exists()) {
+                                    // Notifica l'utente e blocca l'azione
+                                    \Filament\Notifications\Notification::make()
+                                        ->danger()
+                                        ->title('Impossibile eliminare')
+                                        ->body('Questa richiesta non può essere eliminata perché ha dei preventivi associati.')
+                                        ->send();
+
+                                    $action->halt();
+                                }
+                            })
                             ->modalHeading(fn($record): string => 'Elimina Richiesta'),
                     ]),
                 ],
@@ -293,7 +306,23 @@ Il risultato finale di queste tre operazioni è questo:[
             )
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->before(function ($records, $action) {
+                            // Controlla se tra le richieste selezionate ce n'è qualcuna con preventivi
+                            $hasPreventives = $records->filter(function ($record) {
+                                return $record->preventives()->exists();
+                            })->isNotEmpty();
+
+                            if ($hasPreventives) {
+                                \Filament\Notifications\Notification::make()
+                                    ->danger()
+                                    ->title('Operazione annullata')
+                                    ->body('Non è possibile eliminare massivamente perché alcune richieste selezionate hanno preventivi associati.')
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        }),
                 ]),
             ]);
     }

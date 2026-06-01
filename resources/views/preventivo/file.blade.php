@@ -1094,11 +1094,12 @@
                     Quota di partecipazione per persona
                 </div>
                 <div style="font-size:20px; font-weight:bold; margin-top:4px;">
-                    @if (empty($preventivo['prezzo_forzato']))
+                     € {{ number_format($preventivo['prezzo_per_persona'], 2, ',', '.') }}
+                  {{--   @if (empty($preventivo['prezzo_forzato']))
                         € {{ number_format($preventivo['prezzo_per_persona'], 2, ',', '.') }}
                     @else
                         € {{ number_format($preventivo['prezzo_forzato'], 2, ',', '.') }}
-                    @endif
+                    @endif --}}
                 </div>
             </td>
         </tr>

@@ -17,7 +17,7 @@ use Filament\Schemas\Schema;
 
 class QuoteRequestForm
 {
-    
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -169,8 +169,12 @@ class QuoteRequestForm
                                 TextInput::make('telefono')
                                     ->label('Telefono')
                                     ->tel()
-                                    ->maxLength(255)
-                                    ->default(null),
+                                    ->helperText('Formato: +39 seguito dal numero (es. +393331234567)')
+                                    ->regex('/^\+39[0-9]{9,10}$/')
+                                    ->validationMessages([
+                                        'regex' => 'Il numero deve iniziare con +39 seguito da 9-10 cifre',
+                                    ])
+                                    ->required(),
                             ])
 
                             ->columns(2),
@@ -252,8 +256,12 @@ class QuoteRequestForm
                                 TextInput::make('telefono')
                                     ->label('Telefono')
                                     ->tel()
-                                    ->maxLength(255)
-                                    ->default(null),
+                                    ->helperText('Formato: +39 seguito dal numero (es. +393331234567)')
+                                    ->regex('/^\+39[0-9]{9,10}$/')
+                                    ->validationMessages([
+                                        'regex' => 'Il numero deve iniziare con +39 seguito da 9-10 cifre',
+                                    ])
+                                    ->required(),
                             ])
 
                             ->columns(2),

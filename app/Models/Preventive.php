@@ -695,7 +695,7 @@ class Preventive extends Model
 
 
             'prezzo_per_persona' => $this->prezzo_per_persona,
-            'prezzo_forzato' => $this->prezzo_forzato,
+           // 'prezzo_forzato' => $this->prezzo_forzato,
             'scadenza' => $this->date_expiration,
             'creato_da' => $this->creator?->nome . ' ' . $this->creator?->cognome,
             'telefono' => $this->creator?->telefono,

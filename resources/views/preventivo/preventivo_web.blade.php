@@ -951,11 +951,13 @@
             <div
                 class="border-2 border-[#8ebf22] bg-[#8ebf22]/30 rounded-lg p-4 mt-4 mx-12 flex flex-col items-center justify-center text-center">
                 <span class="font-semibold">Quota di partecipazione per persona</span>
-                @if (empty($preventivo['prezzo_forzato']))
+                                    <span class="text-xl font-bold">€ {{ $preventivo['prezzo_per_persona'] }}</span>
+
+               {{--  @if (empty($preventivo['prezzo_forzato']))
                     <span class="text-xl font-bold">€ {{ $preventivo['prezzo_per_persona'] }}</span>
                 @else
                     <span class="text-xl font-bold">€ {{ $preventivo['prezzo_forzato'] }}</span>
-                @endif
+                @endif --}}
                 {{--  @if (!empty($preventivo['quote_scorporate']))
     <div class="mt-4 mx-12 text-sm">
         <p class="font-semibold mb-2">Dettaglio quota individuale:</p>
