@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta charset="UTF-8">
-    <title>Preventivo - TravelFlow</title>
+    <title>Alert Preventivo - TravelFlow</title>
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
 </head>
 
@@ -15,9 +15,8 @@
         <img src="cid:logo" alt="Logo TravelFlow" width="150">
     </p> --}}
 
-<h4>Preventivo n.
-                {{ $preventive->numero }}/{{ $preventive->anno }}</h4>
-
+    <h4>Oggetto: Scadenza offerta - Preventivo n.
+        {{ $preventive->numero }}/{{ $preventive->anno }} in attesa di riscontro</h4>
 
     @if ($preventive->customer->tipo_cliente === 'privato')
         @if ($preventive->customer->genere === 'uomo')
@@ -29,19 +28,17 @@
         <p>Spett.le {{ $preventive->customer->nome }},</p>
     @endif
 
-
-    @if (!empty($corpo_email))
-        {!! $corpo_email !!}
-    @endif
-
+    <p>in data {{ Carbon\Carbon::parse($preventive->data_invio)->format('d/m/Y') }} Le abbiamo inviato il preventivo
+        relativo
+        al viaggio da Lei richiesto.</p>
 
     <div style="margin: 25px 0;">
         <p style="margin-bottom: 15px; color: #333; font-size: 14px;">
             Clicchi sul pulsante per visualizzare il preventivo nel Suo browser
-        </p> 
-                 @if ($preventive->allego_file)
-         <a href="{{ route('preventivo.show.allegato', ['cod_alfa' => $preventive->cod_alfa]) }}"
-            style="display: block;
+        </p>
+        @if ($preventive->allego_file)
+            <a href="{{ route('preventivo.show.allegato', ['cod_alfa' => $preventive->cod_alfa]) }}"
+                style="display: block;
                   background-color: #1a73e8;
                   color: #fff;
                   text-decoration: none;
@@ -51,12 +48,11 @@
                   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                   text-align: center;
                   max-width: 200px;">
-            Visualizzi
-        </a>
-        
-    @else
-        <a href="{{ url('/preventivi/' . $preventive->cod_alfa) }}"
-            style="display: block;
+                Visualizzi
+            </a>
+        @else
+            <a href="{{ url('/preventivi/' . $preventive->cod_alfa) }}"
+                style="display: block;
                   background-color: #1a73e8;
                   color: #fff;
                   text-decoration: none;
@@ -66,19 +62,34 @@
                   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                   text-align: center;
                   max-width: 200px;">
-            Visualizzi
-        </a>
-    @endif
-       
+                Visualizzi
+            </a>
+        @endif
+
     </div>
 
+    <p>Non avendo ancora ricevuto un Suo gentile riscontro, desideriamo
+        informarla che l'offerta è in prossimità di scadenza e che la disponibilità
+        dei servizi proposti dovrà essere nuovamente verificata al momento di una eventuale conferma.</p>
 
+    <p>Le saremmo grati se potesse indicarci brevemente il motivo della mancata risposta, così da
+        poter migliorare il nostro servizio e, se necessario, riformulare la proposta secondo le Sue esigenze.
+    </p>
 
-
-
+    <p>
+        La data di scadenza del preventivo è:
+        <strong>{{ \Carbon\Carbon::parse($preventive->date_expiration)->format('d/m/Y') }}</strong>.
+    </p>
 
 
     <hr style="margin: 30px 0;">
+
+
+
+
+
+
+
 
     <p>
         <a href="{{ route('preventivo.risposta', $preventive->cod_alfa) }}"
@@ -90,12 +101,9 @@
 
     <hr style="margin: 30px 0;">
 
-    <p style="font-size: 14px; color: #333; line-height: 1.6;">
-        Cordiali saluti,<br>
-        <strong>{{ $referente }}</strong><br>
-        Contatto telefonico: {{ $telefono_referente }}
+    <p style="margin-top: 40px; font-size: 0.9em; color: #777;">
+        Questo è un promemoria automatico: se ha già risposto, può ignorare questa email.
     </p>
-
     <p style="text-align:center;">
         <img src="{{ $message->embed(public_path('images/logo.png')) }}" alt="Logo TravelFlow" width="150"
             style="margin-top:25px;">

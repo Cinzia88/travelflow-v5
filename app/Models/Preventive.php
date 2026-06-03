@@ -734,10 +734,10 @@ class Preventive extends Model
                 'Help-Line attiva 24h su 24 tutti i giorni...',
             ],
 
-            'app' => ['nome' => 'La Bussola on the road', 'descrizione' => ''],
+            'app' => ['nome' => 'TravelFlow', 'descrizione' => ''],
 
             'contatti' => [
-                'ragione_sociale' => 'LA BUSSOLA srl – Agenzia viaggi e tour operator',
+                'ragione_sociale' => 'TravelFlow srl – Agenzia viaggi e tour operator',
                 'indirizzo' => 'Via Altaguardia, 1 – 20135 – Milano IT',
                 'cf_pi' => 'Cod. Fisc. / P. IVA 08114120960',
                 'rea_cap' => 'REA: MI – 2003676 – Capitale Sociale: € 10.000',

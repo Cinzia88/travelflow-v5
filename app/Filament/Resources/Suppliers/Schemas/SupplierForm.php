@@ -146,8 +146,10 @@ class SupplierForm
                     ->default(null),
 
                 Textarea::make('descrizione')
+                 ->rows(3)
                     ->columnSpanFull(),
                 Textarea::make('note')
+                    ->rows(3)
                     ->columnSpanFull(),
             ]);
     }

@@ -68,7 +68,8 @@ class PreventiveReminderMail extends Mailable
         }
     };
 
-   
+    if ($this->preventive->allego_file === false || $this->preventive->allego_file === 0) {
+        // GENERA PDF preventivo
         try {
             $this->preventive = Preventive::with([
                 'hotel_preventives.hotel',
@@ -128,15 +129,50 @@ class PreventiveReminderMail extends Mailable
             }
         }
 
-  
+    } else {
+        if($this->preventive->file_preventivo) {
+             $attach($this->preventive->file_preventivo, 'File Preventivo');
+        }
+        if (is_iterable($this->email?->allegati)) {
+            foreach ($this->email->allegati as $allegato) {
+                $attach($allegato, 'Allegato Email');
+            }
+        }
+    }
+
     return $files;
 }
 
-    public function build()
+   /*  public function build()
     {
         // Logica opzionale per WhatsApp
-       
+        try {
+            $service = new BrevoWhatsAppService();
+
+            $to = $this->preventive->customer->telefono; // Assicurati che sia nel formato +39xxx
+            $templateId = 134; // ID del template WhatsApp
+            if ($this->preventive->allego_file === true || $this->preventive->allego_file === 1) {
+                // Link diretto all'allegato email
+                $pdfUrl = route('preventivo.show.allegato', $this->preventive->cod_alfa);
+            } else {
+                // Link alla pagina web del preventivo
+                $pdfUrl = url('/preventivi/' . $this->preventive->cod_alfa);
+            }
+
+            $params = [
+                'nome' => $this->preventive->customer->nome . ' ' . $this->preventive->customer->cognome,
+                'destinazione' => $this->preventive->meta_viaggio ?? 'Destinazione',
+                'preventivo' => $pdfUrl,
+                'scadenza' => optional($this->preventive->date_expiration)->format('d/m/Y') ?? '-',
+                'riscontro' => url('/preventivi/' . $this->preventive->cod_alfa . '/risposta'),
+            ];
+
+            // Invia il messaggio WhatsApp
+            $service->sendTemplate($to, $templateId, $params);
+        } catch (\Throwable $e) {
+            \Log::error('Errore invio WhatsApp (reminder): ' . $e->getMessage());
+        }
 
         return $this;
-    }
+    } */
 }

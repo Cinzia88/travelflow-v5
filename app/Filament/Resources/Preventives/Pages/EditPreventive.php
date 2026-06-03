@@ -109,7 +109,7 @@ class EditPreventive extends EditRecord
 
                 ->action(fn() => $this->saveAsDraft()),
 
-            Actions\Action::make('alert_scaduto')
+          /*   Actions\Action::make('alert_scaduto')
                 ->label('Alert Preventivo Scaduto')
                 ->color('danger')
                 ->requiresConfirmation()
@@ -124,7 +124,7 @@ class EditPreventive extends EditRecord
                         ->title('Email di alert scadenza inviata con successo')
                         ->success()
                         ->send();
-                }),
+                }), */
             Actions\ViewAction::make()
                 ->color('info')
                 ->label('Visualizza Preventivo')

@@ -172,8 +172,10 @@ class ExtraServiceForm
                             ->default(null),
 
                         Textarea::make('descrizione')
+                         ->rows(3)
                             ->columnSpanFull(),
                         Textarea::make('note')
+                            ->rows(3)
                             ->columnSpanFull(),
 
 
@@ -189,6 +191,7 @@ class ExtraServiceForm
                     ->maxLength(255)
                     ->columnSpanFull(),
                 RichEditor::make('descrizione_servizio')
+                 ->extraInputAttributes(['style' => 'min-height: 300px;'])
                     ->toolbarButtons([
                         'bold',
                         'bulletList',

@@ -80,6 +80,10 @@ class PreventiveCreatedMail extends Mailable
         }
 
         $fullPath = storage_path('app/public/' . $path);
+\Log::info("Controllo esistenza file: " . $fullPath);
+if (!file_exists($fullPath)) {
+    \Log::error("FILE NON TROVATO: " . $fullPath);
+}
 
         if (file_exists($fullPath)) {
             $files[] = Attachment::fromPath($fullPath)->as(basename($path));
@@ -108,7 +112,7 @@ class PreventiveCreatedMail extends Mailable
                 'customer',
             ])->find($this->preventive->id);
 
-            $pdf = Pdf::loadView('preventivo_pdf.file', [
+            $pdf = Pdf::loadView('preventivo.file', [
                 'preventivo' => $this->preventive->toPdfArray(),
             ])
             ->setPaper('A4')

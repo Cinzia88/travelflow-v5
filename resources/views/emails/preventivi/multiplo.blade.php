@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta charset="UTF-8">
-    <title>Preventivo - La Bussola On The Road</title>
+    <title>Preventivo - TravelFlow</title>
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
 
 </head>
@@ -13,7 +13,7 @@
 
 
     {{--  <p style="text-align:center;">
-        <img src="{{ $message->embed(public_path('images/logo.png')) }}" alt="Logo La Bussola" width="150">
+        <img src="{{ $message->embed(public_path('images/logo.png')) }}" alt="Logo TravelFlow" width="150">
     </p> --}}
 
 
@@ -117,19 +117,19 @@
         Cordiali saluti,<br>
 
 
-        <strong>Lo Staff La Bussola On The Road</strong><br>
+        <strong>Lo Staff Travelflow</strong><br>
     </p>
 
 
 
     <p style="text-align:center;">
-        <img src="{{ $message->embed(public_path('images/logo.png')) }}" alt="Logo La Bussola" width="150"
+        <img src="{{ $message->embed(public_path('images/logo.png')) }}" alt="Logo Travelflow" width="150"
             style="margin-top:25px;">
     </p>
 
     {{--  <!-- INTESTAZIONE DATI AZIENDA -->
     <p style="text-align:center; font-size: 13px; color: #555; line-height: 1.6; margin-bottom:30px;">
-        <strong>LA BUSSOLA srl – Agenzia viaggi e tour operator</strong><br>
+        <strong>TravelFlow srl – Agenzia viaggi e tour operator</strong><br>
         Via Altaguardia, 1 – 20135 – Milano IT<br>
         Cod. Fisc. / P. IVA 08114120960 – REA: MI – 2003676 – Capitale Sociale: € 10.000<br>
         <strong>Tel:</strong> +39 02 8219 6055 – <strong>WhatsApp:</strong> <a href="https://wa.me/390280886574"

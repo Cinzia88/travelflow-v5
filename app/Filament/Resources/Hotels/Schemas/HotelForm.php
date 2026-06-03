@@ -170,8 +170,10 @@ class HotelForm
                     ->default(null),
 
                 Textarea::make('descrizione')
+                    ->rows(3)
                     ->columnSpanFull(),
                 Textarea::make('note')
+                 ->rows(3)
                     ->columnSpanFull(),
 
                     ]),
@@ -188,6 +190,7 @@ class HotelForm
                     ->minValue(0)
                     ->maxValue(5),
                 RichEditor::make('descrizione')
+                 ->extraInputAttributes(['style' => 'min-height: 300px;'])
                     ->toolbarButtons([
                         'bold',
                         'bulletList',

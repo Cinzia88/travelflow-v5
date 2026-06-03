@@ -15,8 +15,6 @@ class TransportCompanyForm
                 TextInput::make('nome')
                     ->label('Nome')
                     ->maxLength(255),
-                TextInput::make('misura_bg_a_mano')
-                    ->label('Misura Bagagli a Mano'),
                 FileUpload::make('immagine')
                     ->image()
                     ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])

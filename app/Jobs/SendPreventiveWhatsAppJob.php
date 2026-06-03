@@ -15,15 +15,23 @@ class SendPreventiveWhatsAppJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     // Passiamo l'oggetto Email al costruttore
-    public function __construct(public Email $email) {}
+    public function __construct(public Email $email)
+    {
+    }
 
     public function handle(WhatsAppService $whatsapp)
     {
-        // Qui invii il messaggio. 
-        // Assicurati che il tuo WhatsAppService abbia un metodo per i template
+        // Ricarichiamo il customer per essere sicuri di avere il telefono
+        $this->email->load('customer');
+
+        if (!$this->email->customer || !$this->email->customer->telefono) {
+            \Log::error("WhatsApp non inviato: numero telefono mancante per Email ID: {$this->email->id}");
+            return;
+        }
+
         $whatsapp->sendPreventiveMessage(
             $this->email->customer->telefono,
-            'hello_world',
+            'hello_world', // Verifica che il template esista su WhatsApp/Brevo
             ['nome' => $this->email->customer->nome]
         );
     }

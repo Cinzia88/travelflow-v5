@@ -550,6 +550,7 @@ class PreventiveForm
                                                             ->required(),
                                                         RichEditor::make('descrizione')
                                                             ->json()
+                                                             ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                                             ->toolbarButtons([
                                                                 'bold',
                                                                 'bulletList',
@@ -632,6 +633,7 @@ class PreventiveForm
                                                             ->required(),
                                                         RichEditor::make('descrizione')
                                                             ->json()
+                                                                ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                                             ->toolbarButtons([
                                                                 'bold',
                                                                 'bulletList',
@@ -705,6 +707,7 @@ class PreventiveForm
                                                     ->required(fn($livewire) => !$livewire->isDraft),
                                                 RichEditor::make('descrizione')
                                                     ->json()
+                                                        ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                                     ->toolbarButtons([
                                                         'bold',
                                                         'bulletList',
@@ -963,8 +966,10 @@ class PreventiveForm
                                                                         ->default(null),
 
                                                                     Textarea::make('descrizione')
+                                                                     ->rows(3)
                                                                         ->columnSpanFull(),
                                                                     Textarea::make('note')
+                                                                     ->rows(3)
                                                                         ->columnSpanFull(),
 
                                                                 ]),
@@ -980,6 +985,7 @@ class PreventiveForm
                                                         TextInput::make('indirizzo'),
                                                     ])->columns(2),
                                                 RichEditor::make('descrizione')
+                                                    ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                                     ->toolbarButtons([
                                                         'bold',
                                                         'bulletList',
@@ -1157,8 +1163,10 @@ class PreventiveForm
                                                                     ->default(null),
 
                                                                 Textarea::make('descrizione')
+                                                                 ->rows(3)
                                                                     ->columnSpanFull(),
                                                                 Textarea::make('note')
+                                                                 ->rows(3)
                                                                     ->columnSpanFull(),
 
                                                             ]),
@@ -1174,6 +1182,7 @@ class PreventiveForm
                                                         TextInput::make('indirizzo'),
                                                     ])->columns(2),
                                                 RichEditor::make('descrizione')
+                                                    ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                                     ->toolbarButtons([
                                                         'bold',
                                                         'bulletList',
@@ -1452,6 +1461,7 @@ class PreventiveForm
                                             ->addActionLabel('Aggiungi stanza'),
                                         RichEditor::make('quota_comprende_hotel')
                                             ->label('La quota comprende')
+                                            ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                             ->toolbarButtons([
                                                 'bold',
                                                 'bulletList',
@@ -1464,6 +1474,7 @@ class PreventiveForm
                                             ->columnSpanFull(),
                                         RichEditor::make('quota_non_comprende_hotel')
                                             ->label('La quota non comprende')
+                                            ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                             ->toolbarButtons([
                                                 'bold',
                                                 'bulletList',
@@ -1484,6 +1495,7 @@ class PreventiveForm
                                             ->columnSpanFull()
                                             ->label('File Fornitore Hotel'),
                                         Textarea::make('note')
+                                         ->rows(3)
                                             ->label('Note ad uso interno')
                                             ->columnSpanFull(),
 
@@ -1729,6 +1741,7 @@ class PreventiveForm
                                                                 ->label('File Fornitore Trasporto'),
                                                             RichEditor::make('quota_comprende_trasporti')
                                                                 ->label('La quota comprende')
+                                                                ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                                                 ->toolbarButtons([
                                                                     'bold',
                                                                     'bulletList',
@@ -1741,6 +1754,7 @@ class PreventiveForm
                                                                 ->columnSpanFull(),
                                                             RichEditor::make('quota_non_comprende_trasporti')
                                                                 ->label('La quota non comprende')
+                                                                ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                                                 ->toolbarButtons([
                                                                     'bold',
                                                                     'bulletList',
@@ -1983,6 +1997,7 @@ class PreventiveForm
                                                                 ->label('File Fornitore Trasporto'),
                                                             RichEditor::make('quota_comprende_trasporti')
                                                                 ->label('La quota comprende')
+                                                                ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                                                 ->toolbarButtons([
                                                                     'bold',
                                                                     'bulletList',
@@ -1995,6 +2010,7 @@ class PreventiveForm
                                                                 ->columnSpanFull(),
                                                             RichEditor::make('quota_non_comprende_trasporti')
                                                                 ->label('La quota non comprende')
+                                                                ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                                                 ->toolbarButtons([
                                                                     'bold',
                                                                     'bulletList',
@@ -2011,6 +2027,7 @@ class PreventiveForm
 
                                         ]),
                                 Textarea::make('note')
+                                 ->rows(3)
                                     ->label('Note ad uso interno')
                                     ->columnSpanFull(),
                             ]), //fine trasporti
@@ -2079,7 +2096,8 @@ class PreventiveForm
                                                     ->required(),
                                                 TextInput::make('nome')
                                                     ->required(),
-                                                RichEditor::make('descrizione_servizio'),
+                                                RichEditor::make('descrizione_servizio')
+                                                    ->extraInputAttributes(['style' => 'min-height: 300px;']),
                                             ])
                                             ->createOptionUsing(function (array $data) {
                                                 return ExtraService::create($data)->id;
@@ -2139,6 +2157,7 @@ class PreventiveForm
                                         // 4. DETTAGLI (Salvati sulla tabella pivot)
                                         RichEditor::make('descrizione_servizio')
                                             ->label('Descrizione Personalizzata')
+                                            ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                             ->columnSpanFull()
                                             ->toolbarButtons(['bold', 'bulletList', 'italic', 'undo', 'redo']),
 
@@ -2159,6 +2178,7 @@ class PreventiveForm
                                         RichEditor::make('quota_comprende_servizi')
                                             ->label('La quota comprende')
                                             ->columnSpanFull()
+                                            ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                             ->toolbarButtons([
                                                 'bold',
                                                 'bulletList',
@@ -2171,6 +2191,7 @@ class PreventiveForm
                                         RichEditor::make('quota_non_comprende_servizi')
                                             ->label('La quota non comprende')
                                             ->columnSpanFull()
+                                            ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                             ->toolbarButtons([
                                                 'bold',
                                                 'bulletList',
@@ -2191,6 +2212,7 @@ class PreventiveForm
 
                                             ->label('File Fornitore Servizi Extra'),
                                         Textarea::make('note')
+                                         ->rows(3)
                                             ->label('Note ad uso interno')
                                             ->columnSpanFull(),
                                     ])
@@ -2278,6 +2300,7 @@ class PreventiveForm
                                     ->required(),
                                 RichEditor::make('campo_attenzione')
                                     ->label('Campo Attenzione')
+                                        ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                     ->toolbarButtons(['bold', 'bulletList', 'italic', 'orderedList', 'redo', 'underline', 'undo'])
                                     ->dehydrated(true)
                                     ->columnSpanFull(),
@@ -2818,6 +2841,8 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
                                     ->createOptionForm([
                                         TextInput::make('nome')->required()->columnSpanFull(),
                                         RichEditor::make('corpo_email')
+                                            ->label('Corpo Email')
+                                            ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                             ->toolbarButtons(['bold', 'bulletList', 'italic', 'orderedList', 'redo', 'underline', 'undo'])
                                             ->required()
                                             ->columnSpanFull(),
@@ -2849,6 +2874,7 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
 
                                 RichEditor::make('corpo_email')
                                     ->label('Corpo Email')
+                                    ->extraInputAttributes(['style' => 'min-height: 300px;'])
                                     ->live(onBlur: true)
                                     ->dehydrated(true)
                                     ->toolbarButtons(['bold', 'bulletList', 'italic', 'orderedList', 'redo', 'underline', 'undo'])
@@ -3175,10 +3201,14 @@ Accesso: In teoria dovresti usare la sintassi della freccia: $record->prezzo. */
                                                         $mail->cc($email->email_cc);
                                                     }
 
-                                                     $mail->send(new \App\Mail\PreventiveCreatedMail($preventivo, $email));
-                                    
+                                                    $mail->send(new \App\Mail\PreventiveCreatedMail($preventivo, $email));
+
+                                                    if ($preventivo->customer?->telefono) {
+                                                        \App\Jobs\SendPreventiveWhatsAppJob::dispatch($email);
+                                                    }
+
                                                     \Filament\Notifications\Notification::make()
-                                                        ->title('Email inviata con successo')
+                                                        ->title('Email inviata e WhatsApp in coda!')
                                                         ->success()
                                                         ->send();
 

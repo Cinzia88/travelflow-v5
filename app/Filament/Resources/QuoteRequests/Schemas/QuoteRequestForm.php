@@ -293,6 +293,7 @@ class QuoteRequestForm
                     ->rows(3)
                     ->columnSpanFull(),
                 Textarea::make('note')
+                 ->rows(3)
                     ->columnSpanFull(),
             ]);
     }
