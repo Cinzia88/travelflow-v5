@@ -23,7 +23,7 @@ class PreventiveExport implements FromCollection, WithHeadings, ShouldAutoSize, 
     public function collection(): Collection
     {
         $query = Preventive::query()
-            ->with(['creator', 'customer']); // Carica le relazioni
+            ->with(['creator', 'customer']); // Carico le relazioni
 
         if ($this->ids) {
             $query->whereIn('id', $this->ids);
@@ -98,7 +98,7 @@ class PreventiveExport implements FromCollection, WithHeadings, ShouldAutoSize, 
             'stato' => 'STATO',
         ];
 
-        // Converte in maiuscolo leggibile (es. TOTALE_INCASSO → TOTALE INCASSO)
+        // Converto in maiuscolo leggibile (es. TOTALE_INCASSO → TOTALE INCASSO)
         return collect($headings)
             ->map(fn($h) => $translations[$h] ?? strtoupper(str_replace('_', ' ', $h)))
             ->toArray();

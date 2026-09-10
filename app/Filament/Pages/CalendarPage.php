@@ -15,10 +15,10 @@ use Filament\Pages\Page;
 class CalendarPage extends Page
 {
 
-    // Nome che apparirà nella sidebar
+  
     protected static ?string $navigationLabel = 'Calendario';
 
-    // Opzionale: ordinamento (es. mettila per prima)
+   
     protected static ?int $navigationSort = 1;
     protected static ?string $title = 'Calendario Preventivi';
     protected string $view = 'filament.pages.calendar-page';
@@ -63,14 +63,13 @@ class CalendarPage extends Page
                             '10' => 'Verde Basilico',
                             '11' => 'Rosso Pomodoro',
                         ])
-                        ->default('9') // Blu di default
+                        ->default('9') 
                         ->required(),
-                    /* se invece vuoi anche l'orario devi sostituire DatePicker con DateTimePicker */
                 ])
                 ->action(function (array $data) {
                     $inizio = Carbon::parse($data['start_time']);
                     $fine = Carbon::parse($data['end_time']);
-                    $finegoogle = $fine->copy()->addDay(); // Aggiungi un giorno alla data di fine per renderla inclusiva
+                    $finegoogle = $fine->copy()->addDay(); // Aggiungo un giorno alla data di fine per renderla inclusiva
                     $googleEvent = \Spatie\GoogleCalendar\Event::create([
                         'name' => $data['title'],
                         'startDate' => $inizio,
@@ -165,7 +164,7 @@ class CalendarPage extends Page
                         }
                     }
 
-                    // 3. Aggiornamento Database Locale
+                    // Aggiornamento Database Locale
                     $evento->update([
                         'title' => $data['title'],
                         'description' => $data['description'],
@@ -184,7 +183,7 @@ class CalendarPage extends Page
                 ->label('Elimina Evento')
                 ->color('danger')
                 ->icon('heroicon-m-trash')
-                // Chiediamo all'utente quale evento vuole eliminare
+                // Chiedo all'utente quale evento vuole eliminare
                 ->form([
                     Select::make('event_id')
                         ->label('Seleziona l\'evento da rimuovere')

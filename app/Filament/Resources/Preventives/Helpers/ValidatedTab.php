@@ -10,7 +10,7 @@ use Illuminate\Contracts\Support\Htmlable;
 class ValidatedTab
 {
     /* Questo metodo è una "Factory Function" (un costruttore personalizzato) che serve a creare una Tab (una scheda del form di Filament) che sia "intelligente".
-     Crea una Tab che sappia da sola se i dati al suo interno sono corretti o se ci sono errori 
+     Creo una Tab che sappia da sola se i dati al suo interno sono corretti o se ci sono errori 
      string|Htmlable|callable|null $label: La label è il nome della Tab (es. "Dati Generali"). Può essere una stringa semplice, del codice HTML, o una funzione che restituisce il nome
      array $fields: Questo è fondamentale. Qui passi l'elenco dei nomi dei campi (es. ['nome', 'cognome', 'email']) che appartengono a quella specifica Tab. Serve per controllare se proprio quei campi hanno errori di validazione.*/
 
@@ -20,7 +20,7 @@ class ValidatedTab
             ->badge(fn(Get $get, Component $compontent) => static::hasErrors($get, $fields, $compontent) ? '●' : '●')//'✓'
             ->badgeColor(fn(Get $get, Component $compontent) => static::hasErrors($get, $fields, $compontent) ? 'danger' : 'success')
             ->live();
-        /* $get è una funzione che ti permette di andare a sbirciare il valore di altri campi nel form in tempo reale.
+        /* $get è una funzione che permette di andare a sbirciare il valore di altri campi nel form in tempo reale.
 
 A cosa serve: Se sei nella Tab "Dettagli Volo" e vuoi sapere se nella Tab "Anagrafica" l'utente ha selezionato "Privato" o "Azienda", usi $get.
 

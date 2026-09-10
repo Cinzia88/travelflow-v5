@@ -21,7 +21,7 @@ trait HandlesDraftSaving
 
     protected function saveEmailDraft(Preventive $preventivo, array $data): void
 {
-    // Creiamo un array pulito con SOLO i campi che servono alla tabella 'emails'
+    // Creo un array pulito con SOLO i campi che servono alla tabella 'emails'
     $emailCleanData = [
         'email_template_id' => $data['email_template_id'] ?? null,
         'email_cliente'     => $data['email_cliente'] ?? $preventivo->customer?->email,
@@ -34,11 +34,11 @@ trait HandlesDraftSaving
         'is_draft'          => true,
     ];
 
-    // Ora cerchiamo la bozza esistente
+    // Ora cerco la bozza esistente
     $existingDraft = $preventivo->emails()->where('is_draft', true)->first();
 /* Se esiste già una bozza: Non crea mille email inutili, ma sovrascrive quella esistente con le ultime modifiche.
 
-Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella pivot) con il preventivo. */
+Se è la prima volta: Creo il record dell'email e creo il legame (nella tabella pivot) con il preventivo. */
     if ($existingDraft) {
         $existingDraft->update($emailCleanData);
     } else {
@@ -103,7 +103,7 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
         return $this->record;
     });
 
-    // Assegniamo nuovamente il record per sicurezza (necessario su Filament)
+    // Assegno nuovamente il record per sicurezza (necessario su Filament)
     $this->record = $preventivo;
 
     Notification::make()->title('Bozza salvata!')->success()->send();
@@ -115,27 +115,27 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
     protected function processAllFiles(array $data): array
     {
         $tipoVisualizzazione = $data['tipo_visualizzazione_foto'] ?? 'per_giorno';
-    // 1. SE LA MODALITÀ È "IN FONDO" -> Cancelliamo le immagini dai singoli giorni
+    // 1. SE LA MODALITÀ È "IN FONDO" -> Cancello le immagini dai singoli giorni
     if ($tipoVisualizzazione === 'in_fondo') {
         if (!empty($data['itinerario'])) {
             foreach ($data['itinerario'] as $index => $giorno) {
-                // Svuotiamo l'array delle immagini del singolo giorno
+                // Svuoto l'array delle immagini del singolo giorno
                 $data['itinerario'][$index]['immagini'] = [];
             }
         }
 
-        // Processiamo solo la galleria in fondo
+        // Processo solo la galleria in fondo
         if (!empty($data['immagini_itinerario'])) {
             $data['immagini_itinerario'] = $this->processFiles($data['immagini_itinerario'], 'preventivi');
         }
     }
 
-    // 2. SE LA MODALITÀ È "PER GIORNO" -> Cancelliamo la galleria in fondo
+    // 2. SE LA MODALITÀ È "PER GIORNO" -> Cancello la galleria in fondo
     if ($tipoVisualizzazione === 'per_giorno') {
-        // Svuotiamo la galleria globale
+        // Svuoto la galleria globale
         $data['immagini_itinerario'] = [];
 
-        // Processiamo solo le immagini delle singole giornate
+        // Processo solo le immagini delle singole giornate
         if (!empty($data['itinerario'])) {
             foreach ($data['itinerario'] as $index => $giorno) {
                 if (!empty($giorno['immagini'])) {
@@ -200,7 +200,7 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
     protected function processFiles(array $files, string $directory = 'preventivi'): array
     {
         return collect($files)->map(function ($file) use ($directory) {
-            // Se è un file temporaneo, salvalo nello storage
+            // Se è un file temporaneo, salvataggio nello storage
             if ($file instanceof TemporaryUploadedFile) {
                 // Usa storeAs per mantenere il nome originale (come preserveFilenames)
                 $originalName = $file->getClientOriginalName();
@@ -208,7 +208,7 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
                 return $file->storeAs($directory, $filename, 'public');
             }
 
-            // Se è già una stringa (path esistente), mantienila
+            // Se è già una stringa (path esistente), resta invariato
             if (is_string($file)) {
                 return $file;
             }
@@ -219,21 +219,21 @@ Se è la prima volta: Crea il record dell'email e crea il legame (nella tabella 
 
     protected function sanitizeFilename(string $filename): string
     {
-        // Separa nome ed estensione
+        // Separo nome ed estensione
         $pathInfo = pathinfo($filename);
         $name = $pathInfo['filename'];
         $extension = $pathInfo['extension'] ?? '';
 
-        // Rimuovi/sostituisci caratteri problematici
+        // Rimuovo/sostituisco caratteri problematici
         $name = preg_replace('/[^a-zA-Z0-9._-]/', '_', $name);
 
-        // Rimuovi underscore multipli consecutivi
+        // Rimuovo underscore multipli consecutivi
         $name = preg_replace('/_+/', '_', $name);
 
-        // Rimuovi underscore all'inizio e alla fine
+        // Rimuovo underscore all'inizio e alla fine
         $name = trim($name, '_');
 
-        // Ricostruisci il nome
+        // Ricostruisco il nome
         return $extension ? "{$name}.{$extension}" : $name;
     }
 

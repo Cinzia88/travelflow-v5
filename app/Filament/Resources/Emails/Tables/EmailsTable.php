@@ -19,7 +19,7 @@ class EmailsTable
         return $table
              ->modifyQueryUsing(function (Builder $query) {
                 $query->where(function ($q) {
-                    // Mostra solo email inviate (is_draft = false)
+                    // Mostro solo email inviate (is_draft = false)
                     $q->where('is_draft', false)
                         ->orWhereHas('preventives', function ($preventiveQuery) {
                         $preventiveQuery->where('stato', '!=', PreventiveStatus::BOZZA);

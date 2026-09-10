@@ -14,7 +14,7 @@ class CreateEmail extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        // 1. Crea il record normalmente
+        // 1. Creo il record normalmente
         $record = parent::handleRecordCreation($data);
 
         // 2. Invio SOLO se NON è una bozza

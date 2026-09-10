@@ -213,7 +213,7 @@ class EmailForm
                 Select::make('preventives')
                     ->relationship('preventives', 'id', modifyQueryUsing: function (Builder $query) {
 
-                        // Filtra per stato
+                        // Filtro per stato
                         $query->where('stato', '!=', PreventiveStatus::BOZZA);
 
                        
@@ -244,7 +244,7 @@ class EmailForm
                             ->limit(50)
                             ->get()
                             ->mapWithKeys(function ($preventive) {
-                                // Gestisci il nome dell'agente con cognome opzionale
+                                // Gestisco il nome dell'agente con cognome opzionale
                                 $agentName = $preventive->creator
                                     ? ' | Creato da: ' . trim("{$preventive->creator->nome} " . ($preventive->creator->cognome ?? ''))
                                     : '';

@@ -21,7 +21,7 @@ class ItineraryForm
                     ->columnSpanFull()
                     ->required(),
 
-                Select::make('tipo_visualizzazione_foto') // Sistemato l'errore di battitura
+                Select::make('tipo_visualizzazione_foto') 
                     ->label('Tipo di Visualizzazione delle Foto')
                     ->options([
                         'per_giorno' => 'Foto specifiche per ogni giorno',
@@ -47,7 +47,7 @@ class ItineraryForm
                             ->label('Immagini Itinerario')
                             ->image()
                             ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg'])
-                            // Usa ../../ perché siamo dentro il repeater
+                            // Uso ../../ perché siamo dentro il repeater
                             ->hidden(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'in_fondo')
                             ->required(fn(Get $get) => $get('../../tipo_visualizzazione_foto') === 'per_giorno')
                             ->multiple()
